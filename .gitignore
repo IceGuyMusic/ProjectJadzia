@@ -3,3 +3,8 @@
 **/Lib
 **/Scripts
 pyvenv.cfg
+**/include
+**/lib
+**/share
+lib64
+**/bin
