@@ -8,3 +8,4 @@ pyvenv.cfg
 **/share
 lib64
 **/bin
+*.sqlite3
