@@ -1,0 +1,5 @@
+*.mzml
+**/Include
+**/Lib
+**/Scripts
+pyvenv.cfg
