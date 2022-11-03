@@ -2,3 +2,4 @@ numpy
 pyopenms
 Flask
 Flask-SQLAlchemy
+celery
