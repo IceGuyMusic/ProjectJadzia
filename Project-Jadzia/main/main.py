@@ -29,7 +29,9 @@ def upload():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            convert_wiff(file_path)
             return f"Succesfull upload for file {filename}"
     return '''
     <title>Upload new File</title>
@@ -39,6 +41,15 @@ def upload():
       <input type=submit value=Upload>
     </form>
     '''
+
+@main.route("/download/<name>")
+def download_file(name):
+    from flask import send_from_directory
+    return send_from_directory(current_app.config['MZML_FOLDER'], name)
+
+def convert_wiff(file_path):
+    from main.config import bash_msconvert
+    os.system(f"%s %s -o %s " % (bash_msconvert, file_path, current_app.config['MZML_FOLDER']))
 
 @main.route('/<name>')
 def error(name):
