@@ -3,3 +3,4 @@ pyopenms
 Flask
 Flask-SQLAlchemy
 celery
+Redis
