@@ -33,14 +33,8 @@ def upload():
             file.save(file_path)
             convert_wiff(file_path)
             return f"Succesfull upload for file {filename}"
-    return '''
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    '''
+    return render_template('upload.html') 
+
 
 @main.route("/download/<name>")
 def download_file(name):
