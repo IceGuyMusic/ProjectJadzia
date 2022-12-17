@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>PyScript + Flask</title>
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <py-env>
+        - numpy
+        - matplotlib
+        - pandas
+    </py-env>
+
+
+</head>
+
+<body>
+
+    <h1>POC on using Flask with PyScript along with Numpy, Pandas and Matplotlib</h1>
+        <div id="plot1" class="grid-child">
+            <div class="snippet" data-title=".dot-typing">
+                <div class="stage">
+                  <div class="dot-typing"></div>
+                </div>
+            </div>
+        </div>
+    <py-script>
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+
+f1 = plt.figure()
+retention_times = {{data_1}}
+intensities = {{data_2}}
+plt.plot(retention_times, intensities)
+
+plt.title('TIC')
+plt.xlabel('time (s)')
+plt.ylabel('intensity (cps)')        
+pyscript.write('plot1', f1)
+        
+    </py-script>
+
+</body>
+
+</html>

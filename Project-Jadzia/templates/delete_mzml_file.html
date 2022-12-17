@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Delete mzML File{% endblock %}
+{% block content %}
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for msg in messages %}
+			<p class="text-warning">{{msg}}</p>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+        <title>Delete File</title>
+    <h1>Delete File</h1>
+    <form method="post">
+  	<label for="file_name">Select mzML file:</label><br>
+ 	<select name="file_name">
+   	 {% for file in mzml_files %}
+     		 <option value="{{ file }}">{{ file }}</option>
+   	 {% endfor %}
+ 	 </select><br><br>
+ 	<input type="submit" value="Delete">
+    </form>
+    {% endblock %}
