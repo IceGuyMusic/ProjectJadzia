@@ -9,3 +9,5 @@ pyvenv.cfg
 lib64
 **/bin
 *.sqlite3
+**/uploads
+
