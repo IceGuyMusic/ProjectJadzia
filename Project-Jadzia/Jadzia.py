@@ -33,6 +33,9 @@ app.config.update(CELERY_CONFIG={
 })
 celery = make_celery(app)
 
+@app.route("/")
+def mainPage():
+    return render_template("main.html")
 
 @app.route("/celery/")
 def addd_API():

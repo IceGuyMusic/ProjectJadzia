@@ -8,7 +8,7 @@ main = Blueprint('main', __name__)
 
 @main.route("/")
 def home():
-    return render_template('base.html')
+    return render_template('main.html')
 
 
 def allowed_file(filename):
@@ -65,7 +65,9 @@ def see_TIC():
 
 @main.route('/<name>')
 def error(name):
-    return f"{name} was not found"
+    flash(f"{name} was not found")
+    return render_template('main.html')
+
 
 @main.route('/delete_mzml_file', methods=['GET', 'POST'])
 def delete_mzml_file():
