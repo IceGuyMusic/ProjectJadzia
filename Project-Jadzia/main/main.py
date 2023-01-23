@@ -35,6 +35,32 @@ def upload():
             return f"Succesfull upload for file {filename}"
     return render_template('upload.html') 
 
+@main.route("/uploadWindows/", methods=['POST', 'GET'])
+def WINupload():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            from pathlib import Path, PureWindowsPath
+            data_folder = current_app.config['WIN_UPLOAD_FOLDER']
+            file_path_dummy = data_folder / filename
+            file_path = PureWindowsPath(file_path_dummy)
+            #file_path = os.path.join(current_app.config['WIN_UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            WIN_convert_wiff(file_path)
+            return f"Succesfull upload for file {filename}"
+    return render_template('upload.html')
+
+
 
 @main.route("/download/<name>")
 def download_file(name):
@@ -44,6 +70,13 @@ def download_file(name):
 def convert_wiff(file_path):
     from main.config import bash_msconvert
     os.system(f"%s %s -o %s " % (bash_msconvert, file_path, current_app.config['MZML_FOLDER']))
+
+def WIN_convert_wiff(file_path):
+    from main.config import windows_msconvert
+    os.system(f"%s %s -o %s " % (windows_msconvert, file_path, current_app.config['WIN_MZML_FOLDER']))
+    flash('File converted')
+
+
 
 @main.route("/lookData", methods=["GET"])
 def see_TIC():
