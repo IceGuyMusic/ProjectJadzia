@@ -78,9 +78,10 @@ def WIN_convert_wiff(file_path):
 
 @main.route("/lookData/<filename>", methods=["GET"])
 def see_TIC(filename):
-    exp = MSExperiment()
+    exp = MSExperiment() 
+    dummy = r"C:\Users\Biotechnologie\Documents\Bioinformatik\src\ProjectJadzia\Project-Jadzia\uploads\mzml\AltesGABA.mzML"
     filename = f"\{filename}"
-    MzMLFile().load("/c/Users/Biotechnologie/Documents/Bioinformatik/src/ProjectJadzia/Project-Jadzia/uploads/mzml/AltesGABA.mzML", exp)
+    MzMLFile().load(dummy, exp)
     tic = exp.calculateTIC()
     retention_times, intensities = tic.get_peaks()
     retention_times = [spec.getRT() for spec in exp]
