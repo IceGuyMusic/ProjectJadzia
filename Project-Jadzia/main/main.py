@@ -80,7 +80,7 @@ def WIN_convert_wiff(file_path):
 def see_TIC(filename):
     exp = MSExperiment()
     filename = f"\{filename}"
-    MzMLFile().load(r"\uploads\mzml\AltesGABA.mzML", exp)
+    MzMLFile().load("/uploads/mzml/AltesGABA.mzML", exp)
     tic = exp.calculateTIC()
     retention_times, intensities = tic.get_peaks()
     retention_times = [spec.getRT() for spec in exp]
