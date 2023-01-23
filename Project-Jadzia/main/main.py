@@ -31,8 +31,9 @@ def upload():
             filename = secure_filename(file.filename)
             file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
+            flash(f"Successfull upload for file {filename}")
             convert_wiff(file_path)
-            return f"Succesfull upload for file {filename}"
+            return render_template('main.html')
     return render_template('upload.html') 
 
 @main.route("/uploadWindows/", methods=['POST', 'GET'])
@@ -50,15 +51,11 @@ def WINupload():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            #from pathlib import Path, PureWindowsPath
-            #data_folder = current_app.config['WIN_UPLOAD_FOLDER']
-            #file_path_dummy = data_folder / filename
-            #file_path = PureWindowsPath(file_path_dummy)
             file_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"\{filename}" 
-            #file_path = os.path.join(current_app.config['WIN_UPLOAD_FOLDER'], filename)
             file.save(file_path)
+            flash(f"Successfull upload for file {filename}")
             WIN_convert_wiff(file_path)
-            return f"Succesfull upload for file {filename}"
+            return render_template("main.html")
     return render_template('upload.html')
 
 
@@ -79,10 +76,10 @@ def WIN_convert_wiff(file_path):
 
 
 
-@main.route("/lookData", methods=["GET"])
-def see_TIC():
+@main.route("/lookData/<filename>", methods=["GET"])
+def see_TIC(filename):
     exp = MSExperiment()
-    MzMLFile().load(current_app.config['MZML_FOLDER'] + '/T1D_Positiv.mzML', exp)
+    MzMLFile().load(current_app.config['WIN_MZML_FOLDER'] + f'\{filename}', exp)
     tic = exp.calculateTIC()
     retention_times, intensities = tic.get_peaks()
     retention_times = [spec.getRT() for spec in exp]
