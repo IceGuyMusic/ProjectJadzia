@@ -1,7 +1,9 @@
 #!/bin python
 
 bash_msconvert = "sudo docker run -it --rm -e WINEDEBUG=-all -v /your/data:/data chambm/pwiz-skyline-i-agree-to-the-vendor-liscenses wine msconvert "
+windows_msconvert = "/c/Users/Biotechnologie/KNIME/knime_3.3.2/plugins/de.openms.win32.x86_64_2.1.0.201704211842/payload/bin/pwiz-bin/msconvert.exe"
 wrk_dir = "/home/labbikatz/ProjectJadzia/ProjectJadzia/Project-Jadzia" 
+windows_wrk_dir = "/c/Users/Biotechnologie/Documents/Bioinformatik/src/ProjectJadzia/Project-Jadzia"
 
 class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///db.sqlite3'
