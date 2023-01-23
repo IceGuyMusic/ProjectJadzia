@@ -79,7 +79,8 @@ def WIN_convert_wiff(file_path):
 @main.route("/lookData/<filename>", methods=["GET"])
 def see_TIC(filename):
     exp = MSExperiment()
-    MzMLFile().load(current_app.config['WIN_MZML_FOLDER'] + f'\{filename}', exp)
+    filename = f"\{filename}"
+    MzMLFile().load(current_app.config['WIN_MZML_FOLDER'], filename, exp)
     tic = exp.calculateTIC()
     retention_times, intensities = tic.get_peaks()
     retention_times = [spec.getRT() for spec in exp]
