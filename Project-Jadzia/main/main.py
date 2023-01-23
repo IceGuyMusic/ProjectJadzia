@@ -50,10 +50,11 @@ def WINupload():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            from pathlib import Path, PureWindowsPath
-            data_folder = current_app.config['WIN_UPLOAD_FOLDER']
-            file_path_dummy = data_folder / filename
-            file_path = PureWindowsPath(file_path_dummy)
+            #from pathlib import Path, PureWindowsPath
+            #data_folder = current_app.config['WIN_UPLOAD_FOLDER']
+            #file_path_dummy = data_folder / filename
+            #file_path = PureWindowsPath(file_path_dummy)
+            file_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"\{filename}" 
             #file_path = os.path.join(current_app.config['WIN_UPLOAD_FOLDER'], filename)
             file.save(file_path)
             WIN_convert_wiff(file_path)
