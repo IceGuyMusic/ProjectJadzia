@@ -80,7 +80,7 @@ def WIN_convert_wiff(file_path):
 def see_TIC(filename):
     exp = MSExperiment() 
     #dummy = r"C:\Users\Biotechnologie\Documents\Bioinformatik\src\ProjectJadzia\Project-Jadzia\uploads\mzml\AltesGABA.mzML"
-    dummy = os.path.join("C:", "Users", "Biotechnologie", "Documents", "Bioinformatik", "src", "ProjectJadzia", "Project-Jadzia", "uploads", "mzml", "AltesGABA.mzML")
+    dummy = os.path.join("C:", "\\", "Users", "Biotechnologie", "Documents", "Bioinformatik", "src", "ProjectJadzia", "Project-Jadzia", "uploads", "mzml", "AltesGABA.mzML")
     filename = f"\{filename}"
     MzMLFile().load(dummy, exp)
     tic = exp.calculateTIC()
