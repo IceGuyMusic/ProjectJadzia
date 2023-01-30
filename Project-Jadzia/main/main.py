@@ -80,7 +80,7 @@ def WINupload():
             file.save(file_path)
             scan.save(scan_path)
             flash(f"Successfull upload for file {filename} and scan {scan_filename}")
-            WIN_convert_wiff(file_path, scan_path)
+            WIN_convert_wiff(file_path)
             return render_template("main.html")
     return render_template('upload.html')
 
