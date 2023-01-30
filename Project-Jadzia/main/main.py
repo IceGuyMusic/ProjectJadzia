@@ -152,7 +152,7 @@ def select_mzml_file():
     file_name = request.form['file_name']
     file_path = os.path.join(current_app.config['WIN_MZML_FOLDER'], file_name)
     if os.path.exists(file_path):
-      return render_template(f"lookData/{file_name}")
+      return redirect(url_for(f"lookData/{file_name}"))
     else:
       return 'File not found'
   else:
