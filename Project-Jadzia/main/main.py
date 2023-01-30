@@ -136,7 +136,7 @@ def error(name):
 def delete_mzml_file():
   if request.method == 'POST':
     file_name = request.form['file_name']
-    file_path = os.path.join(current_app.config['MZML_FOLDER'], file_name)
+    file_path = os.path.join(current_app.config['WIN_MZML_FOLDER'], file_name)
     if os.path.exists(file_path):
       os.remove(file_path)
       return 'File deleted successfully'
@@ -150,7 +150,7 @@ def delete_mzml_file():
 def select_mzml_file():
   if request.method == 'POST':
     file_name = request.form['file_name']
-    file_path = os.path.join(current_app.config['MZML_FOLDER'], file_name)
+    file_path = os.path.join(current_app.config['WIN_MZML_FOLDER'], file_name)
     if os.path.exists(file_path):
       return render_template(f"lookData/{filename}")
     else:
@@ -161,7 +161,7 @@ def select_mzml_file():
 
 def get_mzml_files():
     mzml_files = []
-    for file in os.listdir(current_app.config['MZML_FOLDER']):
+    for file in os.listdir(current_app.config['WIN_MZML_FOLDER']):
         if file.endswith('.mzML'):
             mzml_files.append(file)
     return mzml_files
