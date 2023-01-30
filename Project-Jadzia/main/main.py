@@ -146,6 +146,19 @@ def delete_mzml_file():
     mzml_files = get_mzml_files()  # replace with the function that returns the list of mzML files
     return render_template('delete_mzml_file.html', mzml_files=mzml_files)
 
+@main.route('/select_mzml_file', methods=['GET', 'POST'])
+def select_mzml_file():
+  if request.method == 'POST':
+    file_name = request.form['file_name']
+    file_path = os.path.join(current_app.config['MZML_FOLDER'], file_name)
+    if os.path.exists(file_path):
+      return render_template(f"lookData/{filename}")
+    else:
+      return 'File not found'
+  else:
+    mzml_files = get_mzml_files()  # replace with the function that returns the list of mzML files
+    return render_template('select_mzml_file.html', mzml_files=mzml_files)
+
 def get_mzml_files():
     mzml_files = []
     for file in os.listdir(current_app.config['MZML_FOLDER']):
