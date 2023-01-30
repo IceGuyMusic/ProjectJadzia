@@ -36,28 +36,53 @@ def upload():
             return render_template('main.html')
     return render_template('upload.html') 
 
+#@main.route("/uploadWindows/", methods=['POST', 'GET'])
+#def WINupload():
+#    if request.method == 'POST':
+#        # check if the post request has the file part
+ #       if 'file' not in request.files:
+  #          flash('No file part')
+   #         return redirect(request.url)
+    #    file = request.files['file']
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+     #   if file.filename == '':
+      #      flash('No selected file')
+       #     return redirect(request.url)
+#        if file and allowed_file(file.filename):
+ #           filename = secure_filename(file.filename)
+  #          file_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"\{filename}" 
+   #         file.save(file_path)
+    #        flash(f"Successfull upload for file {filename}")
+     #       WIN_convert_wiff(file_path)
+      #      return render_template("main.html")
+  #  return render_template('upload.html')
+
 @main.route("/uploadWindows/", methods=['POST', 'GET'])
 def WINupload():
     if request.method == 'POST':
         # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
+        if 'file' not in request.files or 'scan' not in request.files:
+            flash('No file or scan part')
             return redirect(request.url)
         file = request.files['file']
+        scan = request.files['scan']
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
-        if file.filename == '':
-            flash('No selected file')
+        if file.filename == '' or scan.filename == '':
+            flash('No selected file or scan')
             return redirect(request.url)
-        if file and allowed_file(file.filename):
+        if file and scan and allowed_file(file.filename) and allowed_file(scan.filename):
             filename = secure_filename(file.filename)
-            file_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"\{filename}" 
+            scan_filename = secure_filename(scan.filename)
+            file_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"{filename}"
+            scan_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"{scan_filename}"
             file.save(file_path)
-            flash(f"Successfull upload for file {filename}")
-            WIN_convert_wiff(file_path)
+            scan.save(scan_path)
+            flash(f"Successfull upload for file {filename} and scan {scan_filename}")
+            WIN_convert_wiff(file_path, scan_path)
             return render_template("main.html")
-    return render_template('upload.html')
-
+        return render_template('upload.html')
 
 
 @main.route("/download/<name>")
