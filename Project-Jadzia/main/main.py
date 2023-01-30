@@ -75,8 +75,8 @@ def WINupload():
         if file and scan and allowed_file(file.filename) and allowed_file(scan.filename):
             filename = secure_filename(file.filename)
             scan_filename = secure_filename(scan.filename)
-            file_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"{filename}"
-            scan_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"{scan_filename}"
+            file_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"\{filename}"
+            scan_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"\{scan_filename}"
             file.save(file_path)
             scan.save(scan_path)
             flash(f"Successfull upload for file {filename} and scan {scan_filename}")
