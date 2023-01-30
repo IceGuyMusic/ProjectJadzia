@@ -82,7 +82,7 @@ def WINupload():
             flash(f"Successfull upload for file {filename} and scan {scan_filename}")
             WIN_convert_wiff(file_path, scan_path)
             return render_template("main.html")
-        return render_template('upload.html')
+    return render_template('upload.html')
 
 
 @main.route("/download/<name>")
