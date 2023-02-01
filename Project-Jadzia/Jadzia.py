@@ -53,15 +53,23 @@ def addd_API():
 @app.route("/TestData/<filename>", methods=["GET"])
 def see_TestTIC(filename):
     path = os.path.join("/home/labbikatz/ProjectJadzia/ProjectJadzia/Project-Jadzia/uploads/mzml/", filename)
-    results = showMS.delay(path)
+    results = showMS.delay(path, True)
     flash("celery is working")
     return redirect(url_for('mainPage'))
 
 
 @celery.task(name='Jadzia.showMS')
-def showMS(path):
+def showMS(path, GausFilter):
     exp = MSExperiment() 
     MzMLFile().load(path, exp)
+    if GausFilter:
+        gf = GaussFilter()
+        param = gf.getParameters()
+        param.setValue("gaussian_width", 1.0)  # needs wider width
+        gf.setParameters(param)
+        gf.filterExperiment(exp)
+        print("Filtered data")
+        
     tic = exp.calculateTIC()
     retention_times, intensities = tic.get_peaks()
     retention_times = [spec.getRT() for spec in exp]

@@ -112,6 +112,18 @@ def load_from_pickle(filename):
         df = pickle.load(f)
     return render_template('show.html', data_1 = df.retention_times.tolist(), data_2 = df.intensities.tolist())
 
+@main.route('/seePickle', methods=['GET', 'POST'])
+def look_for_pickle():
+  if request.method == 'POST':
+    file_name = request.form['file_name']
+    file_path = f"./uploads/process/{file_name}"
+    if os.path.exists(file_path):
+      return redirect(url_for('main.load_from_pickle', filename=file_name))
+    else:
+      return 'File not found'
+  else:
+    pickle_files = get_pickle_files()  # replace with the function that returns the list of mzML files
+    return render_template('select_mzml_file.html', mzml_files=pickle_files) 
 
 @main.route('/<name>')
 def error(name):
@@ -152,5 +164,12 @@ def get_mzml_files():
         if file.endswith('.mzML'):
             mzml_files.append(file)
     return mzml_files
+                              
+def get_pickle_files():
+    pickle_files = []
+    for file in os.listdir("./uploads/process/"):
+        if file.endswith('.pickle'):
+            pickle_files.append(file)
+    return pickle_files
 
 
