@@ -6,6 +6,7 @@ from datetime import timedelta
 from main.config import Config
 from tasks.celery import make_celery
 from celery import Celery
+from celery.result import AsyncResult
 from pyopenms import *
 import os
 import pickle
@@ -55,6 +56,7 @@ def see_TestTIC(filename):
     results = showMS.delay(path)
     flash("celery is working")
     return redirect(url_for('mainPage'))
+
 
 @celery.task(name='Jadzia.showMS')
 def showMS(path):

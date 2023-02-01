@@ -1,7 +1,14 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <title>PyScript + Flask</title>
+{% extends "base.html" %}
+{% block title %}Upload new File{% endblock %}
+{% block content %}
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for msg in messages %}
+			<p class="text-warning">{{msg}}</p>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+    <title>Show MS Data</title>
     <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
     <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
@@ -14,12 +21,7 @@
         - pandas
     </py-env>
 
-
-</head>
-
-<body>
-
-    <h1>POC on using Flask with PyScript along with Numpy, Pandas and Matplotlib</h1>
+    <h1> </h1>
         <div id="plot1" class="grid-child">
             <div class="snippet" data-title=".dot-typing">
                 <div class="stage">
@@ -44,7 +46,4 @@ plt.ylabel('intensity (cps)')
 pyscript.write('plot1', f1)
         
     </py-script>
-
-</body>
-
-</html>
+    {% endblock %}
