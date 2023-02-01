@@ -108,7 +108,7 @@ def see_TIC(filename):
 
 @main.route('/seePickle/<filename>')
 def load_from_pickle(filename):
-    with open(filename, 'rb') as f:
+    with open('./uploads/process/'+filename, 'rb') as f:
         df = pickle.load(f)
     return render_template('show.html', data_1 = df.retention_times.tolist(), data_2 = df.intensities.tolist())
 

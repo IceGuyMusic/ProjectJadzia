@@ -86,7 +86,7 @@ def add_together(a,b):
 
 def save_as_pickle(retention_times, intensities, filename):
     df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
-    with open(filename, 'wb') as f:
+    with open('./uploads/process/'+filename, 'wb') as f:
         pickle.dump(df, f)
 
 if __name__ == "__main__":
