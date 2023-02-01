@@ -42,6 +42,10 @@ def addd_API():
     add_together.delay(1,12)
     return "Send a Celery"
 
+@app.route("/showcelery/")
+def addd_API(result):
+    return results
+
 
 @celery.task(name='Jadzia.add_together')
 def add_together(a,b):
