@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 import os
 from pyopenms import *
 
+
 main = Blueprint('main', __name__)
 
 @main.route("/")
@@ -125,6 +126,8 @@ def see_TIC(filename):
     except ParseError as e:
         flash('Es gab einen Fehler beim Öffnen der Datei. Wahrscheinlich ist sie beschädigt')
         return render_template('main.html')
+    
+
 
 @main.route('/<name>')
 def error(name):

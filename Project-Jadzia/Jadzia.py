@@ -6,6 +6,8 @@ from datetime import timedelta
 from main.config import Config
 from tasks.celery import make_celery
 from celery import Celery
+from pyopenms import *
+import os
 
 db = SQLAlchemy()
 
@@ -39,17 +41,42 @@ def mainPage():
 
 @app.route("/celery/")
 def addd_API():
-    add_together.delay(1,12)
-    return "Send a Celery"
+    results = add_together.delay(1,12)
+    results.wait()
+    flash(results.get())
+    return f"Send a Celery with {results}"
 
-@app.route("/showcelery/")
-def show(results):
-    return results
+@app.route("/TestData/<filename>", methods=["GET"])
+def see_TestTIC(filename):
+    dummy = os.path.join("/home/labbikatz/ProjectJadzia/ProjectJadzia/Project-Jadzia/uploads/mzml/", filename)
+    results = showMS.delay(dummy)
+    flash("celery is working")
+    return f"TIC wird erstellt"
+
+@celery.task(name='Jadzia.showMS')
+def showMS(dummy):
+    exp = MSExperiment() 
+    MzMLFile().load(dummy, exp)
+    tic = exp.calculateTIC()
+    retention_times, intensities = tic.get_peaks()
+    retention_times = [spec.getRT() for spec in exp]
+    intensities = [sum(spec.get_peaks()[1]) for spec in exp if spec.getMSLevel() == 1]
+    
+    retention_times = []
+    intensities = []
+    for spec in exp:
+        if spec in exp:
+            if spec.getMSLevel() == 1:
+                retention_times.append(spec.getRT())
+                intensities.append(sum(spec.get_peaks()[1])) 
+    print(retention_times, intensities)
+    return retention_times
 
 
 @celery.task(name='Jadzia.add_together')
 def add_together(a,b):
     results = a + b
+    session['Result'] = results
     return results
 
 
