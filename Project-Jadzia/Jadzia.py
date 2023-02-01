@@ -8,6 +8,8 @@ from tasks.celery import make_celery
 from celery import Celery
 from pyopenms import *
 import os
+import pickle
+import pandas as pd
 
 db = SQLAlchemy()
 
@@ -35,6 +37,7 @@ app = create_app()
 #})
 celery = make_celery(app)
 
+
 @app.route("/")
 def mainPage():
     return render_template("main.html")
@@ -48,15 +51,15 @@ def addd_API():
 
 @app.route("/TestData/<filename>", methods=["GET"])
 def see_TestTIC(filename):
-    dummy = os.path.join("/home/labbikatz/ProjectJadzia/ProjectJadzia/Project-Jadzia/uploads/mzml/", filename)
-    results = showMS.delay(dummy)
+    path = os.path.join("/home/labbikatz/ProjectJadzia/ProjectJadzia/Project-Jadzia/uploads/mzml/", filename)
+    results = showMS.delay(path)
     flash("celery is working")
-    return f"TIC wird erstellt"
+    return redirect(url_for('mainPage'))
 
 @celery.task(name='Jadzia.showMS')
-def showMS(dummy):
+def showMS(path):
     exp = MSExperiment() 
-    MzMLFile().load(dummy, exp)
+    MzMLFile().load(path, exp)
     tic = exp.calculateTIC()
     retention_times, intensities = tic.get_peaks()
     retention_times = [spec.getRT() for spec in exp]
@@ -68,17 +71,21 @@ def showMS(dummy):
         if spec in exp:
             if spec.getMSLevel() == 1:
                 retention_times.append(spec.getRT())
-                intensities.append(sum(spec.get_peaks()[1])) 
-    print(retention_times, intensities)
-    return retention_times
+                intensities.append(sum(spec.get_peaks()[1]))
+    filename = f"{os.path.basename(path)}.pickle"
+    save_as_pickle(retention_times, intensities, filename)
+    return f"Save {filename}"
 
 
 @celery.task(name='Jadzia.add_together')
 def add_together(a,b):
     results = a + b
-    session['Result'] = results
     return results
 
+def save_as_pickle(retention_times, intensities, filename):
+    df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
+    with open(filename, 'wb') as f:
+        pickle.dump(df, f)
 
 if __name__ == "__main__":
     app.run(debug=True)

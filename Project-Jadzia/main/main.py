@@ -3,6 +3,7 @@ from flask import Flask, Blueprint, current_app, redirect, url_for, render_templ
 from werkzeug.utils import secure_filename
 import os
 from pyopenms import *
+import pickle
 
 
 main = Blueprint('main', __name__)
@@ -36,28 +37,6 @@ def upload():
             convert_wiff(file_path)
             return render_template('main.html')
     return render_template('upload.html') 
-
-#@main.route("/uploadWindows/", methods=['POST', 'GET'])
-#def WINupload():
-#    if request.method == 'POST':
-#        # check if the post request has the file part
- #       if 'file' not in request.files:
-  #          flash('No file part')
-   #         return redirect(request.url)
-    #    file = request.files['file']
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-     #   if file.filename == '':
-      #      flash('No selected file')
-       #     return redirect(request.url)
-#        if file and allowed_file(file.filename):
- #           filename = secure_filename(file.filename)
-  #          file_path = current_app.config['WIN_UPLOAD_FOLDER'] + f"\{filename}" 
-   #         file.save(file_path)
-    #        flash(f"Successfull upload for file {filename}")
-     #       WIN_convert_wiff(file_path)
-      #      return render_template("main.html")
-  #  return render_template('upload.html')
 
 @main.route("/uploadWindows/", methods=['POST', 'GET'])
 def WINupload():
@@ -126,7 +105,12 @@ def see_TIC(filename):
     except ParseError as e:
         flash('Es gab einen Fehler beim Öffnen der Datei. Wahrscheinlich ist sie beschädigt')
         return render_template('main.html')
-    
+
+@main.route('/seePickle/<filename>')
+def load_from_pickle(filename):
+    with open(filename, 'rb') as f:
+        df = pickle.load(f)
+    return render_template('show.html', data_1 = df.retention_times.tolist(), data_2 = df.intensities.tolist())
 
 
 @main.route('/<name>')
