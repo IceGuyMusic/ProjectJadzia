@@ -43,7 +43,7 @@ def addd_API():
     return "Send a Celery"
 
 @app.route("/showcelery/")
-def addd_API(result):
+def show(results):
     return results
 
 
