@@ -14,8 +14,8 @@ def create_app(config_class=Config):
     app.secret_key = "YC!NWN"
     app.config.from_object(Config)
     app.config.update(CELERY_CONFIG={
-        'broker_url': 'redis://localhost:6379',
-        'result_backend': 'redis://localhost:6379',
+        'broker_url': 'redis://localhost:6379/0',
+        'result_backend': 'redis://localhost:6379/0',
     })
     app.permanent_session_lifetime = timedelta(days = 3)
     from main.main import main
@@ -27,10 +27,10 @@ def create_app(config_class=Config):
 
 app = create_app()
 
-app.config.update(CELERY_CONFIG={
-    'broker_url': 'redis://localhost:6379',
-    'result_backend': 'redis://localhost:6379',
-})
+#app.config.update(CELERY_CONFIG={
+#    'broker_url': 'redis://localhost:6379',
+#    'result_backend': 'redis://localhost:6379',
+#})
 celery = make_celery(app)
 
 @app.route("/")
