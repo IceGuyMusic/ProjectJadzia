@@ -5,6 +5,7 @@ import os
 from pyopenms import *
 import pickle
 import plotly.express as px
+import plotly.subplots as sp
 
 
 main = Blueprint('main', __name__)
@@ -80,43 +81,20 @@ def WIN_convert_wiff(file_path):
     os.system(f"%s %s -o %s " % (windows_msconvert, file_path, current_app.config['WIN_MZML_FOLDER']))
     flash('File converted')
 
-
-
-@main.route("/lookData/<filename>", methods=["GET"])
-def see_TIC(filename):
-    try:
-        exp = MSExperiment() 
-        dummy = os.path.join("C:", "\\", "Users", "Biotechnologie", "Documents", "Bioinformatik", "src", "ProjectJadzia", "Project-Jadzia", "uploads", "mzml", filename)
-        #filename = f"\{filename}"
-        MzMLFile().load(dummy, exp)
-        tic = exp.calculateTIC()
-        retention_times, intensities = tic.get_peaks()
-        retention_times = [spec.getRT() for spec in exp]
-        intensities = [sum(spec.get_peaks()[1]) for spec in exp if spec.getMSLevel() == 1]
-
-        retention_times = []
-        intensities = []
-        for spec in exp:
-            if spec in exp:
-                if spec.getMSLevel() == 1:
-                    retention_times.append(spec.getRT())
-                    intensities.append(sum(spec.get_peaks()[1])) 
-        flash('This Function is old. Use instead seePickle')
-        return render_template("main.html")
-        #return render_template('show.html', data_1 = retention_times, data_2 = intensities)
-
-    except ParseError as e:
-        flash('Es gab einen Fehler beim Öffnen der Datei. Wahrscheinlich ist sie beschädigt')
-        return render_template('main.html')
-
 @main.route('/seePickle/<filename>')
 def load_from_pickle(filename):
     with open('./uploads/process/'+filename, 'rb') as f:
         df = pickle.load(f)
-    fig = px.line(df, x="retention_times", y="intensities", titel=f"TIC der Datei {filename}")
+    fig = px.line(df, x="retention_times", y="intensities", title=f"TIC der Datei {filename}")
     return render_template("show.html", plot=fig.to_html(full_html=False))
     #return render_template('show.html', data_1 = df.retention_times.tolist(), data_2 = df.intensities.tolist())
 
+@main.route('/seePickle_2/<filename>')
+def load_from_pickle_2(filename):
+    with open('./uploads/process/'+filename, 'rb') as f:
+        fig = pickle.load(f)
+    return render_template("show.html", plot=fig.to_html(full_html=False))
+ 
 @main.route('/seePickle', methods=['GET', 'POST'])
 def look_for_pickle():
   if request.method == 'POST':
