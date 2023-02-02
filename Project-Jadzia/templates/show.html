@@ -8,36 +8,7 @@
 			{% endfor %}
 		{% endif %}
 	{% endwith %}
-    <title>Show MS Data</title>
-    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
-    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <py-env>
-        - plotly
-        - pandas
-    </py-env>
-
-    <h1> </h1>
-        <div id="plot1" class="grid-child">
-            <div class="snippet" data-title=".dot-typing">
-                <div class="stage">
-                  <div class="dot-typing"></div>
-                </div>
-            </div>
-        </div>
-    <py-script>
-import plotly.express as px 
-import pandas as pd
-
-
-retention_times = {{data_1}}
-intensities = {{data_2}}
-df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
-fig = px.line(df, x='retention_times', y='intensities', title='TIC')
-pyscript.write('plot1', fig)
-        
-    </py-script>
+        <title>Plot TIC</title>
+    <h1>Plot TIC</h1>
+    {{ plot|safe }}
     {% endblock %}
