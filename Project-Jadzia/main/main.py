@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 import os
 from pyopenms import *
 import pickle
+import plotly.express as px
 
 
 main = Blueprint('main', __name__)
@@ -110,7 +111,9 @@ def see_TIC(filename):
 def load_from_pickle(filename):
     with open('./uploads/process/'+filename, 'rb') as f:
         df = pickle.load(f)
-    return render_template('show.html', data_1 = df.retention_times.tolist(), data_2 = df.intensities.tolist())
+    fig = px.line(df, x="retention_times", y="intensities")
+    return render_template("dummy.html", plot=fig.to_html(full_html=False))
+    #return render_template('show.html', data_1 = df.retention_times.tolist(), data_2 = df.intensities.tolist())
 
 @main.route('/seePickle', methods=['GET', 'POST'])
 def look_for_pickle():

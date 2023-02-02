@@ -5,3 +5,4 @@ Flask-SQLAlchemy
 celery
 Redis
 Pandas
+plotly
