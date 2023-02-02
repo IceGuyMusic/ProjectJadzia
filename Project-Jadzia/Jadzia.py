@@ -52,7 +52,8 @@ def addd_API():
 
 @app.route("/TestData/<filename>", methods=["GET"])
 def see_TestTIC(filename):
-    path = os.path.join("/home/labbikatz/ProjectJadzia/ProjectJadzia/Project-Jadzia/uploads/mzml/", filename)
+    curr_path = os.getcwd() 
+    path = os.path.join(curr_path,"uploads", "mzml", filename)
     results = showMS.delay(path, True)
     flash("celery is working")
     return redirect(url_for('mainPage'))

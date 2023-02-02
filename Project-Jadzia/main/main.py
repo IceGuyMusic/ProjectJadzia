@@ -101,7 +101,9 @@ def see_TIC(filename):
                 if spec.getMSLevel() == 1:
                     retention_times.append(spec.getRT())
                     intensities.append(sum(spec.get_peaks()[1])) 
-        return render_template('show.html', data_1 = retention_times, data_2 = intensities)
+        flash('This Function is old. Use instead seePickle')
+        return render_template("main.html")
+        #return render_template('show.html', data_1 = retention_times, data_2 = intensities)
 
     except ParseError as e:
         flash('Es gab einen Fehler beim Öffnen der Datei. Wahrscheinlich ist sie beschädigt')
@@ -112,7 +114,7 @@ def load_from_pickle(filename):
     with open('./uploads/process/'+filename, 'rb') as f:
         df = pickle.load(f)
     fig = px.line(df, x="retention_times", y="intensities")
-    return render_template("dummy.html", plot=fig.to_html(full_html=False))
+    return render_template("show.html", plot=fig.to_html(full_html=False))
     #return render_template('show.html', data_1 = df.retention_times.tolist(), data_2 = df.intensities.tolist())
 
 @main.route('/seePickle', methods=['GET', 'POST'])
