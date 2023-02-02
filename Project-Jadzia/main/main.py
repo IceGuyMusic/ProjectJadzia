@@ -113,7 +113,7 @@ def see_TIC(filename):
 def load_from_pickle(filename):
     with open('./uploads/process/'+filename, 'rb') as f:
         df = pickle.load(f)
-    fig = px.line(df, x="retention_times", y="intensities")
+    fig = px.line(df, x="retention_times", y="intensities", titel=f"TIC der Datei {filename}")
     return render_template("show.html", plot=fig.to_html(full_html=False))
     #return render_template('show.html', data_1 = df.retention_times.tolist(), data_2 = df.intensities.tolist())
 
