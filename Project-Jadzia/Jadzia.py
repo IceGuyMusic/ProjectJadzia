@@ -40,6 +40,11 @@ celery = make_celery(app)
 def mainPage():
     return render_template("main.html")
 
+@app.errorhandler(404)
+def page_not_found(e):
+    flash('Page not found. Maybe wrong URL')
+    return render_template('main.html')
+
 @app.route("/TestData/<filename>/<modus>", methods=["GET"])
 def modus(filename, modus):
     if modus == "TIC":
@@ -72,7 +77,8 @@ def generateTIC(curr_path, filename, GausFilter):
                 retention_times.append(spec.getRT())
                 intensities.append(sum(spec.get_peaks()[1]))
     df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
-    New_Workflow.save_as_pickle(df)
+    fig = px.line(df, x="retention_times", y="intensities", title=f"TIC der Datei {New_Workflow.name}")
+    New_Workflow.save_as_pickle(fig)
     return f"Save {filename}"
 
 def FilterGauss(exp, gaussian_width=1.0):
