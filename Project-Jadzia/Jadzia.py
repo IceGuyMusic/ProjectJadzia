@@ -34,52 +34,31 @@ def create_app(config_class=Config):
 
 app = create_app()
 
-#app.config.update(CELERY_CONFIG={
-#    'broker_url': 'redis://localhost:6379',
-#    'result_backend': 'redis://localhost:6379',
-#})
 celery = make_celery(app)
-
 
 @app.route("/")
 def mainPage():
     return render_template("main.html")
 
-@app.route("/celery/")
-def addd_API():
-    results = add_together.delay(1,12)
-    results.wait()
-    flash(results.get())
-    return f"Send a Celery with {results}"
-
-@app.route("/TestData/<filename>", methods=["GET"])
-def see_TestTIC(filename):
-    curr_path = os.getcwd() 
-    path = os.path.join(curr_path,"uploads", "mzml", filename)
-    results = showMS.delay(path, True)
-    flash("celery is working")
+@app.route("/TestData/<filename>/<modus>", methods=["GET"])
+def modus(filename, modus):
+    if modus == "TIC":
+        results = generateTIC.delay(os.getcwd(),filename, True)
+        flash("Celery is working to produce TIC")
+    elif modus == "MS1":
+        results = showMS1.delay(os.getcwd(),filename)
+        flash("celery is working to produce MS1 Spectrum")
+    else:
+        flash("Modus is not registered")
     return redirect(url_for('mainPage'))
 
-@app.route("/MSMS/<filename>", methods=["GET"])
-def searchByPrecr_sendTask(filename):
-    curr_path = os.getcwd() 
-    path = os.path.join(curr_path,"uploads", "mzml", filename)
-    results = showMS1.delay(path)
-    flash("celery is working")
-    return redirect(url_for('mainPage'))
-
-@celery.task(name='Jadzia.showMS')
-def showMS(path, GausFilter):
+@celery.task(name='Jadzia.generateTIC')
+def generateTIC(curr_path, filename, GausFilter):
+    New_Workflow = Workflow(curr_path, filename)
     exp = MSExperiment() 
-    MzMLFile().load(path, exp)
+    MzMLFile().load(New_Workflow.get_path(), exp)
     if GausFilter:
-        gf = GaussFilter()
-        param = gf.getParameters()
-        param.setValue("gaussian_width", 1.0)  # needs wider width
-        gf.setParameters(param)
-        gf.filterExperiment(exp)
-        print("Filtered data")
-        
+        exp = FilterGauss(exp)
     tic = exp.calculateTIC()
     retention_times, intensities = tic.get_peaks()
     retention_times = [spec.getRT() for spec in exp]
@@ -92,10 +71,18 @@ def showMS(path, GausFilter):
             if spec.getMSLevel() == 1:
                 retention_times.append(spec.getRT())
                 intensities.append(sum(spec.get_peaks()[1]))
-    filename = f"{os.path.basename(path)}.pickle"
     df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
-    save_as_pickle(df, filename)
+    New_Workflow.save_as_pickle(df)
     return f"Save {filename}"
+
+def FilterGauss(exp, gaussian_width=1.0):
+    gf = GaussFilter()
+    param = gf.getParameters()
+    param.setValue("gaussian_width", gaussian_width)
+    gf.setParameters(param)
+    gf.filterExperiment(exp)
+    print("Filtered data")
+    return exp
 
 @celery.task(name='Jadzia.searchByPrecr')
 def searchByPrecr(path):
@@ -137,9 +124,10 @@ def searchByPrecr(path):
     return f"Save and analyzed" #{filename}"
 
 @celery.task(name='Jadzia.showMS1')
-def showMS1(path):
+def showMS1(curr_dir, filename):
+    Workflow_class = Workflow(curr_dir, filename)
     exp = MSExperiment()
-    MzMLFile().load(path, exp)
+    MzMLFile().load(Workflow_class.get_path(), exp)
     df = pd.DataFrame(columns=['mz', 'intensity', 'rt'])
     n = exp.getNrSpectra() # Nummer wie viele Experimente ich hatte
     i=0
@@ -154,19 +142,25 @@ def showMS1(path):
         i=i+1
     #df = df.query('rt < 300 & rt > 50')
     fig = px.line(df, x="mz", y="intensity", line_group="rt", title='MS1 Spektrum')
-    filename = f"{os.path.basename(path)}_MSMS.pickle" 
-    save_as_pickle(fig, filename)
+    Workflow_class.save_as_pickle(fig, True)
     return f"Save and ready"
 
+class Workflow:
+    def __init__(self,curr_path:str,  name: str):
+        self.name = name
+        self.curr_path = curr_path
 
-@celery.task(name='Jadzia.add_together')
-def add_together(a,b):
-    results = a + b
-    return results
+    def get_path(self):
+        self.path = os.path.join(self.curr_path,"uploads", "mzml", self.name)
+        return str(self.path)
 
-def save_as_pickle(df, filename):
-    with open('./uploads/process/'+filename, 'wb') as f:
-        pickle.dump(df, f)
+    def save_as_pickle(self, df, MSMS=False):
+        if MSMS:
+            filename = f"{self.name}_MSMS.pickle"
+        else:
+            filename = f"{self.name}.pickle"
+        with open(f"{self.curr_path}/uploads/process/{filename}", 'wb') as f:
+            pickle.dump(df, f)
 
 if __name__ == "__main__":
     app.run(debug=True)
