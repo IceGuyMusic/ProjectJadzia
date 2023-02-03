@@ -1,18 +1,20 @@
 #!/usr/bin/env python
-
+# Flask
 from flask import Flask, redirect, url_for, render_template, send_file, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from datetime import timedelta
-from main.config import Config
+# Celery
 from tasks.celery import make_celery
 from celery import Celery
 from celery.result import AsyncResult
+# Datenprocessierung und Verarbeitung
 from pyopenms import *
+from datetime import timedelta
 import os
 import pickle
 import pandas as pd
-import plotly.subplots as sp
 import plotly.express as px
+# Eigene 
+from main.config import Config
 
 db = SQLAlchemy()
 
@@ -36,6 +38,14 @@ app = create_app()
 
 celery = make_celery(app)
 
+################################################################################
+#                                                                              #
+#                                                                              #
+#                           Hello World und Error                              #
+#                                                                              #
+#                                                                              #
+################################################################################
+
 @app.route("/")
 def mainPage():
     return render_template("main.html")
@@ -45,17 +55,40 @@ def page_not_found(e):
     flash('Page not found. Maybe wrong URL')
     return render_template('main.html')
 
-@app.route("/TestData/<filename>/<modus>", methods=["GET"])
-def modus(filename, modus):
-    if modus == "TIC":
-        results = generateTIC.delay(os.getcwd(),filename, True)
-        flash("Celery is working to produce TIC")
-    elif modus == "MS1":
-        results = showMS1.delay(os.getcwd(),filename)
-        flash("celery is working to produce MS1 Spectrum")
+################################################################################
+#                                                                              #
+#                                                                              #
+#                  User Interface für Aufwendige Datenanalyse                  #
+#                                                                              #
+#                                                                              #
+################################################################################
+
+@app.route("/DataProcessingInterface/", methods=["GET", "POST"])
+def modus():
+    if request.method == "POST":
+        filename = request.form.get("filename")
+        modus = request.form.get("modus")
+        if modus == "TIC":
+            results = generateTIC.delay(os.getcwd(), filename, True)
+            flash("Celery is working to produce TIC")
+        elif modus == "MS1":
+            results = showMS1.delay(os.getcwd(), filename)
+            flash("celery is working to produce MS1 Spectrum")
+        else:
+            flash("Modus is not registered")
+        return redirect(url_for('mainPage'))
     else:
-        flash("Modus is not registered")
-    return redirect(url_for('mainPage'))
+        filename = get_mzml_files()
+        modi = ['TIC', 'MS1', 'NN']
+        return render_template("Process.html", filename=filename, modi=modi)
+
+################################################################################
+#                                                                              #
+#                                                                              #
+#                                Celery Tasks                                  #
+#                                                                              #
+#                                                                              #
+################################################################################
 
 @celery.task(name='Jadzia.generateTIC')
 def generateTIC(curr_path, filename, GausFilter):
@@ -81,54 +114,6 @@ def generateTIC(curr_path, filename, GausFilter):
     New_Workflow.save_as_pickle(fig)
     return f"Save {filename}"
 
-def FilterGauss(exp, gaussian_width=1.0):
-    gf = GaussFilter()
-    param = gf.getParameters()
-    param.setValue("gaussian_width", gaussian_width)
-    gf.setParameters(param)
-    gf.filterExperiment(exp)
-    print("Filtered data")
-    return exp
-
-@celery.task(name='Jadzia.searchByPrecr')
-def searchByPrecr(path):
-    exp = MSExperiment()
-    MzMLFile().load(path, exp)
-    df_exp = pd.DataFrame(exp)
-    # Initialisiere Dataframe
-    precursor_list = {
-        'precursor1': {'mz': 100, 'rt': 20, 'tolerance': 30},
-        'precursor2': {'mz': 200, 'rt': 30, 'tolerance': 30}
-    }
-
-    # Initializing the dataframe to store the fragment ions
-    df = pd.DataFrame(columns=['precursor', 'mz', 'intensity', 'rt'])
-
-    ## Loop through the precursor_list
-    #for precursor, values in precursor_list.items():
-    #    mz = values['mz']
-     #   rt = values['rt']
-      #  tolerance = values['tolerance']
-
-        # Select the data in the defined mz and rt range
-       # prec_data = df_exp[(df_exp['mz'] >= mz - tolerance) & (df_exp['mz'] <= mz + tolerance) &
-          #               (df_exp['RT'] >= rt - tolerance) & (df_exp['RT'] <= rt + tolerance)]
-
-        # Add the precursor name and rt to the prec_data
-  #      prec_data['precursor'] = precursor
-   #     prec_data['rt'] = rt
-#
-        # Append the prec_data to the dataframe
- #       df = df.append(prec_data, ignore_index=True)
-
-        # Plotting the dataframe using Plotly
-  #      fig = px.scatter(df, x='mz', y='intensity', color='precursor', facet_col='precursor',
-   #                      facet_col_wrap=2, height=400, title='Fragment Ion Plot')
-    #filename = f"{os.path.basename(path)}_MSMS.pickle" 
-    #save_as_pickle(fig, filename)
-    print(df_exp.head())
-    return f"Save and analyzed" #{filename}"
-
 @celery.task(name='Jadzia.showMS1')
 def showMS1(curr_dir, filename):
     Workflow_class = Workflow(curr_dir, filename)
@@ -151,6 +136,14 @@ def showMS1(curr_dir, filename):
     Workflow_class.save_as_pickle(fig, True)
     return f"Save and ready"
 
+################################################################################
+#                                                                              #
+#                                                                              #
+#                           Notwendige Funktionen                              #
+#                                                                              #
+#                                                                              #
+################################################################################
+
 class Workflow:
     def __init__(self,curr_path:str,  name: str):
         self.name = name
@@ -167,6 +160,22 @@ class Workflow:
             filename = f"{self.name}.pickle"
         with open(f"{self.curr_path}/uploads/process/{filename}", 'wb') as f:
             pickle.dump(df, f)
+            
+def FilterGauss(exp, gaussian_width=1.0):
+    gf = GaussFilter()
+    param = gf.getParameters()
+    param.setValue("gaussian_width", gaussian_width)
+    gf.setParameters(param)
+    gf.filterExperiment(exp)
+    print("Filtered data")
+    return exp
+
+def get_mzml_files():
+    mzml_files = []
+    for file in os.listdir("./uploads/mzml/"):
+        if file.endswith('.mzML'):
+            mzml_files.append(file)
+    return mzml_files
 
 if __name__ == "__main__":
     app.run(debug=True)
