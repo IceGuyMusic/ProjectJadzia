@@ -67,7 +67,7 @@ def page_not_found(e):
 def modus():
     if request.method == "POST":
         filename = request.form.get("filename")
-        modus = request.form.get("modus")
+        modus = request.form.get("modi")
         if modus == "TIC":
             results = generateTIC.delay(os.getcwd(), filename, True)
             flash("Celery is working to produce TIC")
@@ -110,7 +110,8 @@ def generateTIC(curr_path, filename, GausFilter):
                 retention_times.append(spec.getRT())
                 intensities.append(sum(spec.get_peaks()[1]))
     df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
-    fig = px.line(df, x="retention_times", y="intensities", title=f"TIC der Datei {New_Workflow.name}")
+    df['retention_times_min'] = df.retention_times/60
+    fig = px.line(df, x="retention_times_min", y="intensities", title=f"TIC der Datei {New_Workflow.name}", labels=dict(retention_times_min='Retentionszeit [s]', intenities='Intensität'))
     New_Workflow.save_as_pickle(fig)
     return f"Save {filename}"
 
