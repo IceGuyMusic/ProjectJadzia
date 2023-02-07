@@ -156,9 +156,9 @@ class Workflow:
 
     def save_as_pickle(self, df, MSMS=False):
         if MSMS:
-            filename = f"{self.name}_MSMS.pickle"
+            filename = f"{self.name}_MSMS.dax"
         else:
-            filename = f"{self.name}.pickle"
+            filename = f"{self.name}.dax"
         with open(f"{self.curr_path}/uploads/process/{filename}", 'wb') as f:
             pickle.dump(df, f)
             
