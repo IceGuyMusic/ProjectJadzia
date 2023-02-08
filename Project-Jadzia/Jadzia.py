@@ -9,12 +9,15 @@ from celery.result import AsyncResult
 # Datenprocessierung und Verarbeitung
 from pyopenms import *
 from datetime import timedelta
+import datetime
 import os
 import pickle
 import pandas as pd
 import plotly.express as px
 # Eigene 
 from main.config import Config
+
+from dataclasses import dataclass, field
 
 # Hello Darkness
 db = SQLAlchemy()
@@ -168,7 +171,39 @@ class Workflow:
             filename = f"{self.name}.dax"
         with open(f"{self.curr_path}/uploads/process/{filename}", 'wb') as f:
             pickle.dump(df, f)
-            
+
+    def save_class(self):
+        with open(f"{self.curr_path}/uploads/process/{self.name}.workflow", 'wb') as f:
+            pickle.dump(self, f)
+
+    def load_class(self):
+        """ load a class from pickle """
+
+@dataclass
+class study:
+    """ this dataclass descripes a study. Which methods are included, wich files and other metadata """
+    name: str
+    date: datetime.datetime # Have to be a datetime modell
+    matrix: str # species, or matrix e.g. Homo Sapiens Blood
+    method_data_prcs: str # 
+    measurements: list[str] = field(default_factory=list)
+
+    def save_class(self):
+        with open(f"{self.curr_path}/uploads/process/{self.name}.study", 'wb') as f:
+            pickle.dump(self, f)
+
+    def load_class(self):
+        """ load a class from pickle """
+
+    def get_all_methods() -> list[str]:
+        """ read all possible methods from a json file and return a list """
+
+    def add_measurement(self, new_mess) -> list[str]:
+        return self.measurement.append(new_mess)
+    
+    def delete_measurement(self, del_mess) -> list[str]:
+        return self.measurement.remove(del_mess)
+
 def FilterGauss(exp, gaussian_width=1.0):
     gf = GaussFilter()
     param = gf.getParameters()
