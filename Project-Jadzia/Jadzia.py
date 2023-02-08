@@ -16,6 +16,7 @@ import plotly.express as px
 # Eigene 
 from main.config import Config
 
+# Hello Darkness
 db = SQLAlchemy()
 
 def create_app(config_class=Config):
@@ -28,7 +29,13 @@ def create_app(config_class=Config):
     })
     app.permanent_session_lifetime = timedelta(days = 3)
     from main.main import main
+    from blueprints.upload.upload import upload
+    from blueprints.process.process import process
+    from blueprints.results.results import results
     app.register_blueprint(main)
+    app.register_blueprint(upload)
+    app.register_blueprint(process)
+    app.register_blueprint(results)
     db.init_app(app)
     with app.test_request_context():
         db.create_all()
@@ -179,5 +186,5 @@ def get_mzml_files():
     return mzml_files
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
 
