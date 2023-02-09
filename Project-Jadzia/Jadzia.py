@@ -78,10 +78,18 @@ def create_study():
             date = datetime.datetime.now()
         matrix = request.form['matrix']
         method_data_prcs = request.form['method_data_prcs']
+        measurements = request.form['measurements']
         new_study = study(name, date, matrix, os.getcwd(), method_data_prcs)
+        new_study.add_measurement(measurements)
         new_study.save_class()
         flash('Study saved successfully!')
         return redirect(url_for('mainPage'))
+
+@app.route('/study/<filename>')
+def see_study(filename):
+    new_study = load_class(os.getcwd(), filename)
+    print(new_study)
+    return redirect(url_for('mainPage'))
 
 ################################################################################
 #                                                                              #
@@ -194,8 +202,32 @@ class Workflow:
         with open(f"{self.curr_path}/uploads/process/{self.name}.workflow", 'wb') as f:
             pickle.dump(self, f)
 
-    def load_class(self):
-        """ load a class from pickle """
+class sample:
+    """ define samples """
+    pass
+
+class run:
+    """ define a run """
+    pass
+
+class result:
+    pass
+
+class preparation:
+    pass
+
+class pipeline:
+    pass
+
+class job:
+    pass
+
+class feature:
+    pass
+
+class cluster:
+    pass
+
 
 @dataclass
 class study:
@@ -211,18 +243,17 @@ class study:
         with open(f"{self.curr_path}/uploads/process/{self.name}.study", 'wb') as f:
             pickle.dump(self, f)
 
-    def load_class(self):
-        with open(f"{self.curr_path}/uploads/process/{self.name}.study", 'wb') as f:
-            self = pickle.load(f)
-
     def get_all_methods() -> list[str]:
         """ read all possible methods from a json file and return a list """
 
-    def add_measurement(self, new_mess) -> list[str]:
-        return self.measurement.append(new_mess)
+    def add_measurement(self, new_mess):
+        return self.measurements.append(new_mess)
     
     def delete_measurement(self, del_mess) -> list[str]:
-        return self.measurement.remove(del_mess)
+        return self.measurements.remove(del_mess)
+    
+    def __repr__(self):
+        return ("Project {} was created {}. The study is about {} and will be processed by {} with the followed data: {}".format(self.name, self.date, self.matrix, self.method_data_prcs, self.measurements))
 
 def FilterGauss(exp, gaussian_width=1.0):
     gf = GaussFilter()
@@ -232,6 +263,11 @@ def FilterGauss(exp, gaussian_width=1.0):
     gf.filterExperiment(exp)
     print("Filtered data")
     return exp
+
+def load_class(curr_path, filename):
+    with open(f"{curr_path}/uploads/process/{filename}", 'rb') as f:
+        pickl_class = pickle.load(f)
+    return pickl_class
 
 def get_mzml_files():
     mzml_files = []
