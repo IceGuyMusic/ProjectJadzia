@@ -65,6 +65,24 @@ def page_not_found(e):
     flash('Page not found. Maybe wrong URL')
     return render_template('main.html')
 
+@app.route('/create_study', methods=['GET', 'POST'])
+def create_study():
+    if request.method == 'GET':
+        return render_template('study.html')
+    elif request.method == 'POST':
+        name = request.form['name']
+        date_str = request.form.get('date')
+        if date_str:
+            date = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+        else:
+            date = datetime.datetime.now()
+        matrix = request.form['matrix']
+        method_data_prcs = request.form['method_data_prcs']
+        new_study = study(name, date, matrix, os.getcwd(), method_data_prcs)
+        new_study.save_class()
+        flash('Study saved successfully!')
+        return redirect(url_for('mainPage'))
+
 ################################################################################
 #                                                                              #
 #                                                                              #
@@ -185,6 +203,7 @@ class study:
     name: str
     date: datetime.datetime # Have to be a datetime modell
     matrix: str # species, or matrix e.g. Homo Sapiens Blood
+    curr_path: str
     method_data_prcs: str # 
     measurements: list[str] = field(default_factory=list)
 
@@ -193,7 +212,8 @@ class study:
             pickle.dump(self, f)
 
     def load_class(self):
-        """ load a class from pickle """
+        with open(f"{self.curr_path}/uploads/process/{self.name}.study", 'wb') as f:
+            self = pickle.load(f)
 
     def get_all_methods() -> list[str]:
         """ read all possible methods from a json file and return a list """

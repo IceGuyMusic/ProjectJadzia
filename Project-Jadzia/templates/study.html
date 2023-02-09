@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Create new study{% endblock %}
+{% block content %}
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for msg in messages %}
+			<p class="text-warning">{{msg}}</p>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+        <title>Create new Study</title>
+    <h1>Create new Study</h1>
+    <form method=post enctype=multipart/form-data>
+        <br><p>New Name for the study:<br>
+      <input class="form-control" id="name" name="name" type="text" placeholder="Name of the study">
+        <br><p>Startdatum:<br>
+      <input class="form-control" id="date" name="date" type="text" placeholder="YYYY-MM-DD">
+        <br><p>Bennen der Matrix bzw. Spezies:<br>
+      <input class="form-control" id="matrix" name="matrix" type="text" placeholder="Which matrix e.g. Homo Sapiens (Blood)">
+        <br><br>Bennen der Methode, nach der analysiert wird:<br>
+      <input class="form-control" id="method_data_prcs" name="method_data_prcs" type="text" placeholder="Which method">
+        <br><br>
+      <input type=submit value='New Study'>
+    </form>
+    {% endblock %}
