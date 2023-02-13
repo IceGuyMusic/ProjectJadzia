@@ -95,7 +95,7 @@ def see_study(filename):
 def see_cwd():
     curr_path = app.config['CURR_PATH']
     flash(curr_path)
-    return redirect(url_for(''))
+    return redirect(url_for('mainPage'))
 ################################################################################
 #                                                                              #
 #                                                                              #
