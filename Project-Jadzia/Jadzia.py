@@ -248,17 +248,17 @@ class study:
         with open(f"{self.curr_path}/uploads/process/{self.name}.study", 'wb') as f:
             pickle.dump(self, f)
 
-    def get_all_methods() -> list[str]:
-        """ read all possible methods from a json file and return a list """
-
-    def add_measurement(self, new_mess):
-        return self.measurements.append(new_mess)
+#    def get_all_methods() -> list[str]:
+#        """ read all possible methods from a json file and return a list """
+#
+ #   def add_measurement(self, new_mess):
+  #      return self.measurements.append(new_mess)
+   # 
+#    def delete_measurement(self, del_mess) -> list[str]:
+#        return self.measurements.remove(del_mess)
     
-    def delete_measurement(self, del_mess) -> list[str]:
-        return self.measurements.remove(del_mess)
-    
-    def __repr__(self):
-        return ("Project {} was created {}. The study is about {} and will be processed by {} with the followed data: {}".format(self.name, self.date, self.matrix, self.method_data_prcs, self.measurements))
+#    def __repr__(self):
+#        return ("Project {} was created {}. The study is about {} and will be processed by {} with the followed data: {}".format(self.name, self.date, self.matrix, self.method_data_prcs, self.measurements))
 
 def FilterGauss(exp, gaussian_width=1.0):
     gf = GaussFilter()
