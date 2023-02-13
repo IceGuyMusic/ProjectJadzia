@@ -242,7 +242,7 @@ class study:
     matrix: str # species, or matrix e.g. Homo Sapiens Blood
     curr_path: str
     method_data_prcs: str # 
-    measurements: list[str] = field(default_factory=list)
+    #measurements: list[str] = field(default_factory=list)
 
     def save_class(self):
         with open(f"{self.curr_path}/uploads/process/{self.name}.study", 'wb') as f:
