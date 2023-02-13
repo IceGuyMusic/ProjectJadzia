@@ -91,6 +91,11 @@ def see_study(filename):
     print(new_study)
     return redirect(url_for('mainPage'))
 
+@app.route('/returncwd/')
+def see_cwd():
+    curr_path = app.config['CURR_PATH']
+    flash(curr_path)
+    return redirect(url_for(''))
 ################################################################################
 #                                                                              #
 #                                                                              #
