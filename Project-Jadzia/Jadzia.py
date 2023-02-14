@@ -36,7 +36,7 @@ def create_app(config_class=Config):
     from blueprints.process.process import process
     from blueprints.results.results import results
     app.register_blueprint(main)
-    app.register_blueprint(upload)
+    app.register_blueprint(upload, url_prefix='/upload')
     app.register_blueprint(process)
     app.register_blueprint(results)
     db.init_app(app)

@@ -5,27 +5,8 @@ import os
 
 upload = Blueprint('upload', __name__)
 
-@upload.route("/upload/", methods=['POST', 'GET'])
-def func_upload():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-            flash(f"Successfull upload for file {filename}")
-            convert_wiff(file_path)
-            return render_template('main.html')
-    return render_template('upload.html') 
-
-@upload.route("/uploadWindows/", methods=['POST', 'GET'])
-def WINupload():
+@upload.route("/", methods=['POST', 'GET'])
+def uploadFile():
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files or 'scan' not in request.files:
