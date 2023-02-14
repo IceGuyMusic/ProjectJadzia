@@ -1,0 +1,15 @@
+{
+	"plugins": ["plugins.sum"],
+
+
+	"pipelines": [
+		{
+		"type": "Pipe", 
+		"name": "Some Cool name"
+		},
+		{
+		"type": "sum",
+		"name": "singerData"
+		}
+	]
+}

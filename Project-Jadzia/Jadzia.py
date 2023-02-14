@@ -16,10 +16,10 @@ import pandas as pd
 import plotly.express as px
 # Eigene 
 from main.config import Config
-
+import factory, loader
 from dataclasses import dataclass, field
+import json
 
-# Hello Darkness
 db = SQLAlchemy()
 
 def create_app(config_class=Config):
@@ -91,10 +91,17 @@ def see_study(filename):
     print(new_study)
     return redirect(url_for('mainPage'))
 
-@app.route('/returncwd/')
+@app.route('/testArea')
 def see_cwd():
-    curr_path = app.config['CURR_PATH']
-    flash(curr_path)
+    factory.register("Pipe", Pipe)
+    with open("pipeline.json") as file:
+        data = json.load(file)
+        loader.load_plugins(data["plugins"])
+        some_pipes = [factory.create(item) for item in data["pipelines"]]
+
+        for some_pipe in some_pipes:
+            print(some_pipe)
+            some_pipe.run()
     return redirect(url_for('mainPage'))
 ################################################################################
 #                                                                              #
@@ -280,6 +287,14 @@ def get_mzml_files():
         if file.endswith('.mzML'):
             mzml_files.append(file)
     return mzml_files
+
+@dataclass 
+class Pipe:
+    name: str
+
+    def run(self) -> None:
+        print('And I run and I run and I run...')
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
