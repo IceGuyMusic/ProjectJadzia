@@ -41,12 +41,12 @@ def WINupload():
         if file and scan and allowed_file(file.filename) and allowed_file(scan.filename):
             filename = secure_filename(file.filename)
             scan_filename = secure_filename(scan.filename)
-            file_path = current_app.config['WIN_UPLOAD_FOLDER'] + str(filename)
-            scan_path = current_app.config['WIN_UPLOAD_FOLDER'] + str(scan_filename)
+            file_path = current_app.config['WIFF_FOLDER']+ str(filename)
+            scan_path = current_app.config['WIFF_FOLDER'] + str(scan_filename)
             file.save(file_path)
             scan.save(scan_path)
             flash(f"Successfull upload for file {filename} and scan {scan_filename}")
-            WIN_convert_wiff(file_path)
+            convert_wiff(file_path)
             return render_template("main.html")
     return render_template('upload.html')
 
@@ -55,10 +55,18 @@ def allowed_file(filename):
 
 def convert_wiff(file_path):
     from main.config import bash_msconvert
-    os.system(f"%s %s -o %s " % (bash_msconvert, file_path, current_app.config['MZML_FOLDER']))
+    import platform 
+    plt = platform.system()
+    if plt == "Windows":
+        WIN_convert_wiff(file_path)
+    elif plt == "Linux":
+        os.system(f"%s %s -o %s " % (bash_msconvert, file_path, current_app.config['MZML_FOLDER']))
+        flash('File was converted in mzML')
+    else: 
+        flash('Convert was mot supported!')
 
 def WIN_convert_wiff(file_path):
     from main.config import windows_msconvert
-    os.system(f"%s %s -o %s " % (windows_msconvert, file_path, current_app.config['WIN_MZML_FOLDER']))
+    os.system(f"%s %s -o %s " % (windows_msconvert, file_path, current_app.config['MZML_FOLDER']))
     flash('File converted')
 

@@ -79,7 +79,7 @@ def create_study():
         matrix = request.form['matrix']
         method_data_prcs = request.form['method_data_prcs']
         measurements = request.form['measurements']
-        new_study = study(name, date, matrix, os.getcwd(), method_data_prcs)
+        new_study = study(name, date, matrix, app.config['PROCESS_FOLDER'], method_data_prcs)
         new_study.add_measurement(measurements)
         new_study.save_class()
         flash('Study saved successfully!')
@@ -87,7 +87,7 @@ def create_study():
 
 @app.route('/study/<filename>')
 def see_study(filename):
-    new_study = load_class(os.getcwd(), filename)
+    new_study = load_class(app.config['PROCESS_FOLDER'], filename)
     print(new_study)
     return redirect(url_for('mainPage'))
 
@@ -110,10 +110,10 @@ def modus():
         filename = request.form.get("filename")
         modus = request.form.get("modi")
         if modus == "TIC":
-            results = generateTIC.delay(os.getcwd(), filename, True)
+            results = generateTIC.delay(app.config['MZML_FOLDER'], filename, True)
             flash("Celery is working to produce TIC")
         elif modus == "MS1":
-            results = showMS1.delay(os.getcwd(), filename)
+            results = showMS1.delay(app.config['MZML_FOLDER'], filename)
             flash("celery is working to produce MS1 Spectrum")
         else:
             flash("Modus is not registered")
@@ -240,7 +240,7 @@ class study:
     name: str
     date: datetime.datetime # Have to be a datetime modell
     matrix: str # species, or matrix e.g. Homo Sapiens Blood
-    curr_path: str
+    curr_path: app.config['PROCESS_FOLDER'] 
     method_data_prcs: str # 
     #measurements: list[str] = field(default_factory=list)
 
@@ -276,7 +276,7 @@ def load_class(curr_path, filename):
 
 def get_mzml_files():
     mzml_files = []
-    for file in os.listdir("./uploads/mzml/"):
+    for file in os.listdir(app.config['MZML_FOLDER']):
         if file.endswith('.mzML'):
             mzml_files.append(file)
     return mzml_files
