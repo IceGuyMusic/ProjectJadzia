@@ -20,6 +20,7 @@ import factory, loader
 from dataclasses import dataclass, field
 import json
 
+
 db = SQLAlchemy()
 
 def create_app(config_class=Config):
@@ -63,6 +64,7 @@ def mainPage():
 @app.errorhandler(404)
 def page_not_found(e):
     flash('Page not found. Maybe wrong URL')
+    app.logger.error('User searched for an unregistered URL')
     return render_template('main.html')
 
 @app.route('/create_study', methods=['GET', 'POST'])

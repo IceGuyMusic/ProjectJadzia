@@ -28,7 +28,12 @@ def uploadFile():
             scan.save(scan_path)
             flash(f"Successfull upload for file {filename} and scan {scan_filename}")
             convert_wiff(file_path)
+            current_app.logger.info(f"{filename} was uploaded")
             return render_template("main.html")
+        else:
+            flash("Cannot save file. Maybe wrong type")
+            current_app.logger.warning(f"{file.filename} or {scan.filename} or both  was blocked because not allowed extension")
+            return redirect(request.url)
     return render_template('upload.html')
 
 def allowed_file(filename):
