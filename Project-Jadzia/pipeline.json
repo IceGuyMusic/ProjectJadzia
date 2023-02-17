@@ -1,11 +1,23 @@
 {
-	"plugins": ["plugins.sum"],
+	"plugins": ["plugins.sum", "plugins.Pipe", "plugins.tic"],
 
 
 	"pipelines": [
 		{
 		"type": "Pipe", 
 		"name": "Some Cool name"
+
+		},
+		{
+		"type": "TIC",
+		"name": "generate TIC of T1D",
+		"curr_path": "",
+		"filename": "" ,
+		"GausFilter": true
+		},
+		{
+		"type": "Pipe",
+		"name": "TIC"
 		},
 		{
 		"type": "sum",

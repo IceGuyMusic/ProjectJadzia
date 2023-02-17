@@ -2,6 +2,7 @@ numpy
 pyopenms
 Flask
 Flask-SQLAlchemy
+flask-login
 celery
 Redis
 Pandas

@@ -19,7 +19,7 @@ from main.config import Config
 import factory, loader
 from dataclasses import dataclass, field
 import json
-
+from typing import List
 
 db = SQLAlchemy()
 
@@ -95,16 +95,13 @@ def see_study(filename):
 
 @app.route('/testArea')
 def see_cwd():
-    factory.register("Pipe", Pipe)
-    with open("pipeline.json") as file:
-        data = json.load(file)
-        loader.load_plugins(data["plugins"])
-        some_pipes = [factory.create(item) for item in data["pipelines"]]
-
-        for some_pipe in some_pipes:
-            print(some_pipe)
-            some_pipe.run()
+    #doSomeTest.delay()
+    exp = MSExperiment()
+    test = FeatureDetection(exp, 'T1D_Positiv.mzML')
+    test.run()
+    #print(test.DF.head())
     return redirect(url_for('mainPage'))
+
 ################################################################################
 #                                                                              #
 #                                                                              #
@@ -165,6 +162,16 @@ def generateTIC(curr_path, filename, GausFilter):
     New_Workflow.save_as_pickle(fig)
     return f"Save {filename}"
 
+@celery.task(name='Jadzia.doSomeTest')
+def doSomeTest():
+    for obj in some_pipes:
+        if obj.name == "generate TIC of T1D":
+            obj.curr_path = app.config['MZML_FOLDER']
+            obj.filename = "T1D_Positiv.mzML"
+            obj.run()
+
+
+
 @celery.task(name='Jadzia.showMS1')
 def showMS1(curr_dir, filename):
     Workflow_class = Workflow(curr_dir, filename)
@@ -186,7 +193,6 @@ def showMS1(curr_dir, filename):
     fig = px.line(df, x="mz", y="intensity", line_group="rt", title='MS1 Spektrum')
     Workflow_class.save_as_pickle(fig, True)
     return f"Save and ready"
-
 ################################################################################
 #                                                                              #
 #                                                                              #
@@ -269,7 +275,7 @@ class study:
 #    def __repr__(self):
 #        return ("Project {} was created {}. The study is about {} and will be processed by {} with the followed data: {}".format(self.name, self.date, self.matrix, self.method_data_prcs, self.measurements))
 
-def FilterGauss(exp, gaussian_width=1.0):
+def FilterGauss(exp, gaussian_width=1.0) -> MSExperiment:
     gf = GaussFilter()
     param = gf.getParameters()
     param.setValue("gaussian_width", gaussian_width)
@@ -290,14 +296,216 @@ def get_mzml_files():
             mzml_files.append(file)
     return mzml_files
 
-@dataclass 
-class Pipe:
-    name: str
+with open("pipeline.json") as file:
+    data = json.load(file)
+loader.load_plugins(data["plugins"])
+some_pipes = [factory.create(item) for item in data["pipelines"]]
+
+@dataclass
+class HPLC_settings:
+    column: str
+    instrument: str
+    gradient: str
+    pressure: float
+    flux: float
+    temp: float
+
+@dataclass
+class Spectra:
+    exp: MSExperiment
+    filename: str
+    curr_path: str = app.config['MZML_FOLDER']
+    nrOfSpectra: int = field(init=False)
+    filepath: str = field(init=False)
+    ms_level: List[int] = field(default=None)
+    precursor: List[float] = field(default=None)
+    rt: List[float] = field(default=None)
+    products: List[float] = field(default=None)
+    peaks: List[float] = field(default=None)
+
+    def __post_init__(self):
+        self.filepath = os.path.join(self.curr_path, self.filename)
+        MzMLFile().load(self.filepath, self.exp) 
+        self.nrOfSpectra = self.exp.getNrSpectra() 
+
+        self.ms_level = []
+        self.precursor = []
+        self.rt = []
+        self.products = []
+        self.peaks = []
+
+        self.createDF()
+
+    def createDF(self):
+        for i in range(self.nrOfSpectra):
+            Spec = self.exp[i]
+            self.ms_level.append(Spec.getMSLevel())
+            if Spec.getPrecursors():
+                Prec = Spec.getPrecursors()
+                list_Prec = []
+                for i in Prec:
+                    list_Prec.append(i.getMZ())
+                self.precursor.append(list_Prec)
+            else:
+                self.precursor.append(None)
+            self.rt.append(Spec.getRT())
+            if Spec.getProducts():
+                Prod = Spec.getProducts()
+                list_Prod = []
+                for i in Prod:
+                    list_Prod.append(i.getMZ())
+                self.products.append(list_Prod) 
+            else:
+                self.products.append(None)
+            self.peaks.append(Spec.get_peaks())
+        
+        data = {
+            'ms_level': self.ms_level,
+            'precursor': self.precursor,
+            'rt' : self.rt,
+            'products' : self.products,
+            'peaks' : self.peaks
+        }    
+        self.DF = pd.DataFrame(data)
+
+@dataclass
+class FilterRT:
+    DF: pd.DataFrame
+    minRT: float 
+    maxRT: float
+
+    def run(self) -> pd.DataFrame:
+        filterDF = self.DF.query("rt > @self.minRT & rt < @self.maxRT ")
+        return  filterDF.copy()
+
+@dataclass
+class FilterMSLevel:
+    DF: pd.DataFrame
+    MSLevel_Filter: int
+
+    def run(self) -> pd.DataFrame:
+        filterDF = self.DF.query("ms_level == @self.MSLevel_Filter")
+        return filterDF.copy()
+
+@dataclass
+class FilterPrecursor:
+    DF: pd.DataFrame
+    minPrecIon: float
+    maxPrecIon: float
+
+    def run(self) -> pd.DataFrame:
+        filterDF = self.DF.query("precursor > @self.minPrecIon & precursor < @self.maxPrecIon")
+        return filterDF.copy()
+#FilterByScanNr
+def FilterByScanNr():
+    scan_nrs = [0, 2, 5, 7]
+
+    filtered = MSExperiment()
+    for k, s in enumerate(inp):
+        if k in scan_nrs:
+            filtered.addSpectrum(s)
+
+#FilterBySpectraAndPeaks
+@dataclass
+class FilterSpecPeaks:
+    exp: MSExperiment
+    mz_start: float
+    mz_end : float
+    filtered: MSExperiment = field(init= False)
+
+    def run(self):
+        self.filtered = MSExperiment()
+        for s in self.exp:
+            if s.getMSLevel() > 1:
+                filtered_mz = []
+                filtered_int = []
+                for mz, i in zip(*s.get_peaks()):
+                    if mz > self.mz_start and mz < self.mz_end:
+                        filtered_mz.append(mz)
+                        filtered_int.append(i)
+                s.set_peaks((filtered_mz, filtered_int))
+                self.filtered.addSpectrum(s)
+
+@dataclass
+class Centroiding:
+    exp: MSExperiment
+    centered_exp: MSExperiment = field(init = False)
 
     def run(self) -> None:
-        print('And I run and I run and I run...')
+        PeakPickerHiRes().pickExperiment( self.exp,self.centered_exp, True)  # pick all spectra
 
+    def __post_init__(self):
+        self.centered_exp = MSExperiment()
+
+@dataclass
+class FeatureDetection:
+    exp: MSExperiment
+    filename: str
+    curr_path: str = app.config['MZML_FOLDER']
+    filepath: str = field(init=False)
+
+    def __post_init__(self):
+        self.filepath = os.path.join(self.curr_path, self.filename)
+        SignalToNoise(self.filepath)
+        self.filepath = os.path.join(self.curr_path, 'processed_file.mzML')
+        self.exp = MSExperiment()
+        #MzMLFile().load(self.filepath, self.exp)
+        options = PeakFileOptions()
+        options.setMSLevels([1])
+        #x = DRange1(lower= 7) #, upper=10000000)
+        #options.setIntensityRange(x)
+        self.bufferFile = MzMLFile()
+        self.bufferFile.setOptions(options) 
+        self.bufferFile.load(self.filepath, self.exp) 
+    
+    def run(self) -> None:
+
+        # Prepare data loading (save memory by only
+        # loading MS1 spectra into memory)
+        options = PeakFileOptions()
+        options.setMSLevels([1])
+        fh = MzMLFile()
+        fh.setOptions(options)
+        
+        # Load data
+        self.exp.updateRanges()
+        
+        ff = FeatureFinder()
+        ff.setLogType(LogType.CMD)
+        
+        # Run the feature finder
+        name = "centroided"
+        features = FeatureMap()
+        seeds = FeatureMap()
+        params = FeatureFinder().getParameters(name)
+        ff.run(name, self.exp, features, params, seeds)
+    
+        features.setUniqueIds()
+        fh = FeatureXMLFile()
+        fh.store("output.featureXML", features)
+        print("Found", features.size(), "features")
+
+        f0 = features[0]
+        for f in features:
+            print(f.getRT(), f.getMZ())
+    
+def SignalToNoise(path_exp):
+
+    # Load the mzML file
+    exp = MSExperiment()
+    MzMLFile().load(path_exp, exp)
+    
+    # Define the noise filter
+    filtered = MSExperiment()
+    for s in exp:
+        if s.getRT() > 30 and s.getRT() < 420:
+            if s.getMSLevel() == 1:
+                nf = SignalToNoiseEstimatorMeanIterative()
+                nf.init(s)
+                filtered.addSpectrum(s) 
+    
+    # Save the processed mzML file
+    MzMLFile().store("./uploads/mzml/processed_file.mzML", filtered)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
-
