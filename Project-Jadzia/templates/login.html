@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for msg in messages %}
+			<p class="text-warning">{{msg}}</p>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+        <title>Login</title>
+    <h1>Login</h1>
+    <form method=post enctype=form-control>
+        <br><p>Eingabe des Username:<br>
+      <input type=text name=username>
+        <br><br>Eingabe des Passwortes:<br>
+      <input type=password name=password>
+      <input type=submit value=Login>
+    </form>
+    {% endblock %}

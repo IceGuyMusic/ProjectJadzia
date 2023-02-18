@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for msg in messages %}
+			<p class="text-warning">{{msg}}</p>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+        <title>Register</title>
+    <h1>Register</h1>
+    <h1>Register</h1>
+    <form method=post enctype=form-control>
+        <br><p>Eingabe des Username:<br>
+      <input type=text name=username>
+        <br><p>Eingabe der E-Mail Adresse:<br>
+      <input type=email name=email>
+        <br><br>Eingabe des Passwortes:<br>
+      <input type=password name=password>
+        <br><br>Passwort erneut eingeben:<br>
+      <input type=password name=passwordVer>
+      <input type=submit value=Login>
+    </form>
+    {% endblock %}

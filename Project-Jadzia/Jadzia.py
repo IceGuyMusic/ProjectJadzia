@@ -2,6 +2,7 @@
 # Flask
 from flask import Flask, redirect, url_for, render_template, send_file, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin
 # Celery
 from tasks.celery import make_celery
 from celery import Celery
@@ -20,6 +21,8 @@ import factory, loader
 from dataclasses import dataclass, field
 import json
 from typing import List
+import bcrypt 
+
 
 db = SQLAlchemy()
 
@@ -41,13 +44,114 @@ def create_app(config_class=Config):
     app.register_blueprint(process)
     app.register_blueprint(results)
     db.init_app(app)
-    with app.test_request_context():
+    with app.app_context():
         db.create_all()
     return app
 
-app = create_app()
 
+app = create_app()
 celery = make_celery(app)
+
+#with app.app_context():
+#    db.create_all()
+# Login-Manager initialisieren
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+# Benutzer-Modell erstellen
+#class User(UserMixin, db.Model):
+#    id = db.Column(db.Integer, primary_key=True)
+#    username = db.Column(db.String(50), unique=True)
+#    email = db.Column(db.String(50), unique=True)
+#    password = db.Column(db.String(255))
+
+ #   def __init__(self, username, email, password):
+ #       self.username = username
+ #       self.email = email
+ #       self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+  #  def check_password(self, password):
+   #     return bcrypt.checkpw(password.encode('utf-8'), self.password)
+
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True, unique=True)
+    email = db.Column(db.String(120), index=True, unique=True)
+    password_hash = db.Column(db.String(128))
+
+#    def __repr__(self):
+#        return '<User {}>'.format(self.username)
+#
+#    def set_password(self, password):
+#        self.password_hash = generate_password_hash(password)
+#
+#    def check_password(self, password):
+#        return check_password_hash(self.password_hash, password)
+
+# Routen für Login und Registrierung
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Überprüfen, ob der Benutzername und das Passwort korrekt sind
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            flash('Erfolgreich angemeldet!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Ungültige Anmeldeinformationen', 'error')
+
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        password_Ver = request.form['passwordVer']
+
+        # Überprüfen, ob der Benutzername und die E-Mail-Adresse eindeutig sind
+        if password_Ver != password:
+            flash('Beide Passwörter stimmen nicht miteinander überein!', 'error')
+#        elif User.query.filter_by(username=username).first() is not None:
+#            flash('Der Benutzername ist bereits vergeben', 'error')
+#        elif User.query.filter_by(email=email).first() is not None:
+#            flash('Die E-Mail-Adresse ist bereits registriert', 'error')
+        else:
+            # Neuen Benutzer erstellen und zur Datenbank hinzufügen
+
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) 
+            user = User(username=username, email=email, password_hash=password_hash)
+            db.session.add(user)
+            db.session.commit()
+            flash('Erfolgreich registriert! Bitte melden Sie sich an.', 'success')
+            return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 ################################################################################
 #                                                                              #

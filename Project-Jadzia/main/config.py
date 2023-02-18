@@ -11,7 +11,7 @@ wrk_dir = "/home/labbikatz/ProjectJadzia/ProjectJadzia/Project-Jadzia"
 windows_wrk_dir = r"C:\Users\Biotechnologie\Documents\Bioinformatik\src\ProjectJadzia\Project-Jadzia"
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///db.sqlite3'
+    SQLALCHEMY_DATABASE_URI = os.path.join('sqlite:///'+ curr_path, "db.sqlite3") 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WIFF_FOLDER = os.path.join(curr_path, "uploads", "wiff") 
     MZML_FOLDER = os.path.join(curr_path, "uploads", "mzml")

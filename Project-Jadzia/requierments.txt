@@ -7,3 +7,4 @@ celery
 Redis
 Pandas
 plotly
+bcrypt
