@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Flask
 from flask import Flask, redirect, url_for, render_template, send_file, request, session, flash
-from flask_sqlalchemy import SQLAlchemy
+#from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin
 # Celery
 from tasks.celery import make_celery
@@ -22,9 +22,11 @@ from dataclasses import dataclass, field
 import json
 from typing import List
 import bcrypt 
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+import requests
 
-
-db = SQLAlchemy()
+#db = SQLAlchemy()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -43,15 +45,17 @@ def create_app(config_class=Config):
     app.register_blueprint(upload, url_prefix='/upload')
     app.register_blueprint(process)
     app.register_blueprint(results)
-    db.init_app(app)
-    with app.app_context():
-        db.create_all()
+ #   db.init_app(app)
+ #   with app.app_context():
+ #       db.create_all()
     return app
 
 
 app = create_app()
 celery = make_celery(app)
 
+client = MongoClient('mongodb://localhost:27017/')
+db = client['mydatabase']
 #with app.app_context():
 #    db.create_all()
 # Login-Manager initialisieren
@@ -73,67 +77,177 @@ login_manager.init_app(app)
   #  def check_password(self, password):
    #     return bcrypt.checkpw(password.encode('utf-8'), self.password)
 
+#@dataclass
+#class User(UserMixin):
+#
+#    id: int
+#    username: str 
+#    email: str
+#    password_hash: str
+#    created_at: datetime.datetime = field(init=False)
+#    is_active: bool = field(init=False)
+#    def __post_init__(self):
+#        self.created_at = datetime.datetime.now()
+#        self.user_dict = self.to_dict()
+##w  wself.is_active = False
+##    def __repr__(self):
+##        return '<User {}>'.format(self.username)
+##
+##    def set_password(self, password):
+##        self.password_hash = generate_password_hash(password)
+##
+##    def check_password(self, password):
+##        return check_password_hash(self.password_hash, password)
+#    def check_password(self, password):
+#        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+#
+#    def to_dict(self):
+#        return {
+#            'username': self.username,
+#            'email': self.email,
+#            'password_hash': self.password_hash
+#        }
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
 
+class User(UserMixin):
+    def __init__(self, id: int, username: str, email: str, password_hash: str):
+        self.id = id
+        self.username = username
+        self.email = email
+        self.password_hash = password_hash
+        self.created_at = datetime.datetime.now()
+        self.user_dict = self.to_dict()
+
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'password_hash': self.password_hash
+        }
+
+    def set_password(self, password):
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+#    def get_id(self):
+#        return str(self.id)
 #    def __repr__(self):
 #        return '<User {}>'.format(self.username)
+#    @staticmethod
+#    def get(user_id):
+#        with open('users.json', 'r') as f:
+#            users = json.load(f)
+#        print(user_id)
+#        print(users)
 #
-#    def set_password(self, password):
-#        self.password_hash = generate_password_hash(password)
-#
-#    def check_password(self, password):
-#        return check_password_hash(self.password_hash, password)
+# Durchlaufe alle Benutzer im Dictionary
+#        for user in users.values():
+#            print(user)
+#            # Überprüfe, ob die 'id' Eigenschaft im Benutzerobjekt vorhanden ist und ob sie der gesuchten ID entspricht
+#            if 'id' in user and user['id'] == user_id:
+#                return (User(user['id'], user['username'], user['email'], user['password_hash']))
 
-# Routen für Login und Registrierung
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        with open('users.json', 'r') as f:
+            users = json.load(f)
+
         username = request.form['username']
         password = request.form['password']
 
-        # Überprüfen, ob der Benutzername und das Passwort korrekt sind
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
-            login_user(user)
-            flash('Erfolgreich angemeldet!', 'success')
+        if username not in users:
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+
+        user = users[username]
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        if bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+            User_log = User(user['id'],user['username'], user['email'], user['password_hash'])
+            login_user(User_log)
             return redirect(url_for('dashboard'))
         else:
-            flash('Ungültige Anmeldeinformationen', 'error')
-
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
     return render_template('login.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        with open('users.json', 'r') as f:
+            users = json.load(f)
+
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
         password_Ver = request.form['passwordVer']
 
+        if username in users:
+            flash('Username already taken')
+            return redirect(url_for('register')) 
+
         # Überprüfen, ob der Benutzername und die E-Mail-Adresse eindeutig sind
         if password_Ver != password:
             flash('Beide Passwörter stimmen nicht miteinander überein!', 'error')
-#        elif User.query.filter_by(username=username).first() is not None:
-#            flash('Der Benutzername ist bereits vergeben', 'error')
-#        elif User.query.filter_by(email=email).first() is not None:
-#            flash('Die E-Mail-Adresse ist bereits registriert', 'error')
+            return redirect(url_for('register'))
         else:
             # Neuen Benutzer erstellen und zur Datenbank hinzufügen
 
-            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) 
-            user = User(username=username, email=email, password_hash=password_hash)
-            db.session.add(user)
-            db.session.commit()
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+#            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) 
+            user = User(id(username), username, email, password_hash)
             flash('Erfolgreich registriert! Bitte melden Sie sich an.', 'success')
+            users[username] = user.to_dict()
+            with open('users.json', 'w') as f:
+                json.dump(users, f)
             return redirect(url_for('login'))
 
     return render_template('register.html')
+
+
+#    # Routen für Login und Registrierung
+#    @app.route('/login', methods=['GET', 'POST'])
+#def login():
+    #if request.method == 'POST':
+    #    username = request.form['username']
+    #    password = request.form['password']
+    #    user = db.users.find_one({'username': username})
+    #    if user and User(**user).check_password(password):
+    #        # user authenticated
+    #        return redirect(url_for('dashboard'))
+    #    else:
+    #        flash('Invalid username or password')
+    #return render_template('login.html')
+#
+#
+#@app.route('/register', methods=['GET', 'POST'])
+#def register():
+#    if request.method == 'POST':
+#        username = request.form['username']
+#        email = request.form['email']
+#        password = request.form['password']
+#        password_Ver = request.form['passwordVer']
+#
+#        # Überprüfen, ob der Benutzername und die E-Mail-Adresse eindeutig sind
+#        if password_Ver != password:
+#            flash('Beide Passwörter stimmen nicht miteinander überein!', 'error')
+##        elif User.query.filter_by(username=username).first() is not None:
+##            flash('Der Benutzername ist bereits vergeben', 'error')
+##        elif User.query.filter_by(email=email).first() is not None:
+##            flash('Die E-Mail-Adresse ist bereits registriert', 'error')
+#        else:
+#            # Neuen Benutzer erstellen und zur Datenbank hinzufügen
+#
+#            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) 
+#            user = User(username, email, password)
+#            db.users.insert_one(user.__dict__)
+            #flash('Erfolgreich registriert! Bitte melden Sie sich an.', 'success')
+            #return redirect(url_for('login'))
+#
+#    return render_template('register.html')
 
 
 @app.route('/dashboard')
@@ -148,11 +262,44 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
+def get_user(user_id)-> User:
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    print(user_id)
+    print(users)
+    # Durchlaufe alle Benutzer im Dictionary
+    for user in users.values():
+        print(user)
+        print(user.get('id'))
+        # Überprüfe, ob die 'id' Eigenschaft im Benutzerobjekt vorhanden ist und ob sie der gesuchten ID entspricht
+        if user.get('id') == str(user_id):
+            x= User(user.get('id'), user.get('username'), user.get('email'), user.get('password_hash'))
+            print('gefunden')
+            print(x)
+            return x
+        
+login_manager.login_view = "login"
+#@login_manager.user_loader
+#def load_user(user_id):
+#    return get_user(user_id)
 @login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
+def load_user(id):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    print(id)
+    print(users)
+    # Durchlaufe alle Benutzer im Dictionary
+    for user in users.values():
+        print(user)
+        print(user.get('id'))
+        if str(id) in str(user.values()):
+            print('davor')
+            x= User(user.get('id'), user.get('username'), user.get('email'), user.get('password_hash'))
+            print('gefunden')
+            print(x)
+            return x
+        else:
+            print("really?")
 ################################################################################
 #                                                                              #
 #                                                                              #

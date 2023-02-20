@@ -1,3 +1,4 @@
+requests
 numpy
 pyopenms
 Flask
@@ -8,3 +9,4 @@ Redis
 Pandas
 plotly
 bcrypt
+pymongo
