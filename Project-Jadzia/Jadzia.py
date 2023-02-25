@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # Flask
 from flask import Flask, redirect, url_for, render_template, send_file, request, session, flash
-#from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin
 # Celery
 from tasks.celery import make_celery
@@ -10,23 +9,16 @@ from celery.result import AsyncResult
 # Datenprocessierung und Verarbeitung
 from pyopenms import *
 from datetime import timedelta
-import datetime
-import os
-import pickle
 import pandas as pd
 import plotly.express as px
 # Eigene 
 from main.config import Config
 import factory, loader
 from dataclasses import dataclass, field
-import json
+import json, bcrypt, os, pickle, datetime
 from typing import List
-import bcrypt 
-from pymongo import MongoClient
 from bson.objectid import ObjectId
-import requests
 
-#db = SQLAlchemy()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -45,69 +37,16 @@ def create_app(config_class=Config):
     app.register_blueprint(upload, url_prefix='/upload')
     app.register_blueprint(process)
     app.register_blueprint(results)
- #   db.init_app(app)
- #   with app.app_context():
- #       db.create_all()
     return app
 
 
 app = create_app()
 celery = make_celery(app)
 
-client = MongoClient('mongodb://localhost:27017/')
-db = client['mydatabase']
-#with app.app_context():
-#    db.create_all()
-# Login-Manager initialisieren
 login_manager = LoginManager()
 login_manager.init_app(app)
-
-# Benutzer-Modell erstellen
-#class User(UserMixin, db.Model):
-#    id = db.Column(db.Integer, primary_key=True)
-#    username = db.Column(db.String(50), unique=True)
-#    email = db.Column(db.String(50), unique=True)
-#    password = db.Column(db.String(255))
-
- #   def __init__(self, username, email, password):
- #       self.username = username
- #       self.email = email
- #       self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-  #  def check_password(self, password):
-   #     return bcrypt.checkpw(password.encode('utf-8'), self.password)
-
-#@dataclass
-#class User(UserMixin):
-#
-#    id: int
-#    username: str 
-#    email: str
-#    password_hash: str
-#    created_at: datetime.datetime = field(init=False)
-#    is_active: bool = field(init=False)
-#    def __post_init__(self):
-#        self.created_at = datetime.datetime.now()
-#        self.user_dict = self.to_dict()
-##w  wself.is_active = False
-##    def __repr__(self):
-##        return '<User {}>'.format(self.username)
-##
-##    def set_password(self, password):
-##        self.password_hash = generate_password_hash(password)
-##
-##    def check_password(self, password):
-##        return check_password_hash(self.password_hash, password)
-#    def check_password(self, password):
-#        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
-#
-#    def to_dict(self):
-#        return {
-#            'username': self.username,
-#            'email': self.email,
-#            'password_hash': self.password_hash
-#        }
-
+login_manager.login_view = "login"
+login_manager.login_message = "Successfull Log In"
 
 class User(UserMixin):
     def __init__(self, id: int, username: str, email: str, password_hash: str):
@@ -131,23 +70,6 @@ class User(UserMixin):
 
     def set_password(self, password):
         self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-#    def get_id(self):
-#        return str(self.id)
-#    def __repr__(self):
-#        return '<User {}>'.format(self.username)
-#    @staticmethod
-#    def get(user_id):
-#        with open('users.json', 'r') as f:
-#            users = json.load(f)
-#        print(user_id)
-#        print(users)
-#
-# Durchlaufe alle Benutzer im Dictionary
-#        for user in users.values():
-#            print(user)
-#            # Überprüfe, ob die 'id' Eigenschaft im Benutzerobjekt vorhanden ist und ob sie der gesuchten ID entspricht
-#            if 'id' in user and user['id'] == user_id:
-#                return (User(user['id'], user['username'], user['email'], user['password_hash']))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -197,7 +119,6 @@ def register():
             # Neuen Benutzer erstellen und zur Datenbank hinzufügen
 
             password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-#            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) 
             user = User(id(username), username, email, password_hash)
             flash('Erfolgreich registriert! Bitte melden Sie sich an.', 'success')
             users[username] = user.to_dict()
@@ -207,54 +128,10 @@ def register():
 
     return render_template('register.html')
 
-
-#    # Routen für Login und Registrierung
-#    @app.route('/login', methods=['GET', 'POST'])
-#def login():
-    #if request.method == 'POST':
-    #    username = request.form['username']
-    #    password = request.form['password']
-    #    user = db.users.find_one({'username': username})
-    #    if user and User(**user).check_password(password):
-    #        # user authenticated
-    #        return redirect(url_for('dashboard'))
-    #    else:
-    #        flash('Invalid username or password')
-    #return render_template('login.html')
-#
-#
-#@app.route('/register', methods=['GET', 'POST'])
-#def register():
-#    if request.method == 'POST':
-#        username = request.form['username']
-#        email = request.form['email']
-#        password = request.form['password']
-#        password_Ver = request.form['passwordVer']
-#
-#        # Überprüfen, ob der Benutzername und die E-Mail-Adresse eindeutig sind
-#        if password_Ver != password:
-#            flash('Beide Passwörter stimmen nicht miteinander überein!', 'error')
-##        elif User.query.filter_by(username=username).first() is not None:
-##            flash('Der Benutzername ist bereits vergeben', 'error')
-##        elif User.query.filter_by(email=email).first() is not None:
-##            flash('Die E-Mail-Adresse ist bereits registriert', 'error')
-#        else:
-#            # Neuen Benutzer erstellen und zur Datenbank hinzufügen
-#
-#            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) 
-#            user = User(username, email, password)
-#            db.users.insert_one(user.__dict__)
-            #flash('Erfolgreich registriert! Bitte melden Sie sich an.', 'success')
-            #return redirect(url_for('login'))
-#
-#    return render_template('register.html')
-
-
 @app.route('/dashboard')
 @login_required
 def dashboard():
     return render_template('dashboard.html')
-
 
 @app.route('/logout')
 @login_required
@@ -262,44 +139,18 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-def get_user(user_id)-> User:
-    with open('users.json', 'r') as f:
-        users = json.load(f)
-    print(user_id)
-    print(users)
-    # Durchlaufe alle Benutzer im Dictionary
-    for user in users.values():
-        print(user)
-        print(user.get('id'))
-        # Überprüfe, ob die 'id' Eigenschaft im Benutzerobjekt vorhanden ist und ob sie der gesuchten ID entspricht
-        if user.get('id') == str(user_id):
-            x= User(user.get('id'), user.get('username'), user.get('email'), user.get('password_hash'))
-            print('gefunden')
-            print(x)
-            return x
-        
-login_manager.login_view = "login"
-#@login_manager.user_loader
-#def load_user(user_id):
-#    return get_user(user_id)
 @login_manager.user_loader
 def load_user(id):
     with open('users.json', 'r') as f:
         users = json.load(f)
-    print(id)
-    print(users)
     # Durchlaufe alle Benutzer im Dictionary
     for user in users.values():
-        print(user)
-        print(user.get('id'))
         if str(id) in str(user.values()):
-            print('davor')
             x= User(user.get('id'), user.get('username'), user.get('email'), user.get('password_hash'))
-            print('gefunden')
-            print(x)
             return x
         else:
-            print("really?")
+            return None
+
 ################################################################################
 #                                                                              #
 #                                                                              #
@@ -346,11 +197,9 @@ def see_study(filename):
 
 @app.route('/testArea')
 def see_cwd():
-    #doSomeTest.delay()
     exp = MSExperiment()
     test = FeatureDetection(exp, 'T1D_Positiv.mzML')
     test.run()
-    #print(test.DF.head())
     return redirect(url_for('mainPage'))
 
 ################################################################################
@@ -421,8 +270,6 @@ def doSomeTest():
             obj.filename = "T1D_Positiv.mzML"
             obj.run()
 
-
-
 @celery.task(name='Jadzia.showMS1')
 def showMS1(curr_dir, filename):
     Workflow_class = Workflow(curr_dir, filename)
@@ -444,6 +291,7 @@ def showMS1(curr_dir, filename):
     fig = px.line(df, x="mz", y="intensity", line_group="rt", title='MS1 Spektrum')
     Workflow_class.save_as_pickle(fig, True)
     return f"Save and ready"
+
 ################################################################################
 #                                                                              #
 #                                                                              #
@@ -499,7 +347,6 @@ class feature:
 class cluster:
     pass
 
-
 @dataclass
 class study:
     """ this dataclass descripes a study. Which methods are included, wich files and other metadata """
@@ -513,18 +360,6 @@ class study:
     def save_class(self):
         with open(f"{self.curr_path}/uploads/process/{self.name}.study", 'wb') as f:
             pickle.dump(self, f)
-
-#    def get_all_methods() -> list[str]:
-#        """ read all possible methods from a json file and return a list """
-#
- #   def add_measurement(self, new_mess):
-  #      return self.measurements.append(new_mess)
-   # 
-#    def delete_measurement(self, del_mess) -> list[str]:
-#        return self.measurements.remove(del_mess)
-    
-#    def __repr__(self):
-#        return ("Project {} was created {}. The study is about {} and will be processed by {} with the followed data: {}".format(self.name, self.date, self.matrix, self.method_data_prcs, self.measurements))
 
 def FilterGauss(exp, gaussian_width=1.0) -> MSExperiment:
     gf = GaussFilter()
@@ -647,7 +482,7 @@ class FilterPrecursor:
     def run(self) -> pd.DataFrame:
         filterDF = self.DF.query("precursor > @self.minPrecIon & precursor < @self.maxPrecIon")
         return filterDF.copy()
-#FilterByScanNr
+
 def FilterByScanNr():
     scan_nrs = [0, 2, 5, 7]
 
@@ -700,17 +535,13 @@ class FeatureDetection:
         SignalToNoise(self.filepath)
         self.filepath = os.path.join(self.curr_path, 'processed_file.mzML')
         self.exp = MSExperiment()
-        #MzMLFile().load(self.filepath, self.exp)
         options = PeakFileOptions()
         options.setMSLevels([1])
-        #x = DRange1(lower= 7) #, upper=10000000)
-        #options.setIntensityRange(x)
         self.bufferFile = MzMLFile()
         self.bufferFile.setOptions(options) 
         self.bufferFile.load(self.filepath, self.exp) 
     
     def run(self) -> None:
-
         # Prepare data loading (save memory by only
         # loading MS1 spectra into memory)
         options = PeakFileOptions()
@@ -741,7 +572,6 @@ class FeatureDetection:
             print(f.getRT(), f.getMZ())
     
 def SignalToNoise(path_exp):
-
     # Load the mzML file
     exp = MSExperiment()
     MzMLFile().load(path_exp, exp)
