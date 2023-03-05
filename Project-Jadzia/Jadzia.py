@@ -33,7 +33,9 @@ def create_app(config_class=Config):
     from blueprints.upload.upload import upload
     from blueprints.process.process import process
     from blueprints.results.results import results
+#    from blueprints.login.login import login
     app.register_blueprint(main)
+ #   app.register_blueprint(login)
     app.register_blueprint(upload, url_prefix='/upload')
     app.register_blueprint(process)
     app.register_blueprint(results)
@@ -46,7 +48,6 @@ celery = make_celery(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-login_manager.login_message = "Successfull Log In"
 
 class User(UserMixin):
     def __init__(self, id: int, username: str, email: str, password_hash: str):

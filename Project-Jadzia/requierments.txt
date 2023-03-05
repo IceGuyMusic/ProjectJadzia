@@ -9,4 +9,3 @@ Redis
 Pandas
 plotly
 bcrypt
-pymongo
