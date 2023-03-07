@@ -504,18 +504,6 @@ class FilterSpecPeaks:
                         filtered_int.append(i)
                 s.set_peaks((filtered_mz, filtered_int))
                 self.filtered.addSpectrum(s)
-
-@dataclass
-class Centroiding:
-    exp: MSExperiment
-    centered_exp: MSExperiment = field(init = False)
-
-    def run(self) -> None:
-        PeakPickerHiRes().pickExperiment( self.exp,self.centered_exp, True)  # pick all spectra
-
-    def __post_init__(self):
-        self.centered_exp = MSExperiment()
-
 @dataclass
 class FeatureDetection:
     exp: MSExperiment

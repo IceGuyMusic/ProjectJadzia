@@ -1,5 +1,5 @@
 {
-	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr"],
+	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding"],
 
 
 	"pipelines": [
@@ -10,6 +10,11 @@
 		{
 		"type": "FilterByScanNr",
 		"name": "Filter the First Experiments",
-		"scan_nrs": [0]}
+		"scan_nrs": [0]
+		},
+		{
+		"type": "Centroiding",
+		"name": "Centroiding the MS1 Spektra"
+		}
 	]
 }
