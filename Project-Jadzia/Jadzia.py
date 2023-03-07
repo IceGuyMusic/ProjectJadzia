@@ -484,14 +484,6 @@ class FilterPrecursor:
         filterDF = self.DF.query("precursor > @self.minPrecIon & precursor < @self.maxPrecIon")
         return filterDF.copy()
 
-def FilterByScanNr():
-    scan_nrs = [0, 2, 5, 7]
-
-    filtered = MSExperiment()
-    for k, s in enumerate(inp):
-        if k in scan_nrs:
-            filtered.addSpectrum(s)
-
 #FilterBySpectraAndPeaks
 @dataclass
 class FilterSpecPeaks:

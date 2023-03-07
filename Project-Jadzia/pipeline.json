@@ -1,11 +1,15 @@
 {
-	"plugins": ["plugins.GaussianFilter"],
+	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr"],
 
 
 	"pipelines": [
 		{
 		"type": "GaussianFilter", 
 		"name": "Some Cool name"
-		}
+		}, 
+		{
+		"type": "FilterByScanNr",
+		"name": "Filter the First Experiments",
+		"scan_nrs": [0]}
 	]
 }
