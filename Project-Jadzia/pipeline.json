@@ -1,27 +1,11 @@
 {
-	"plugins": ["plugins.sum", "plugins.Pipe", "plugins.tic"],
+	"plugins": ["plugins.GaussianFilter"],
 
 
 	"pipelines": [
 		{
-		"type": "Pipe", 
+		"type": "GaussianFilter", 
 		"name": "Some Cool name"
-
-		},
-		{
-		"type": "TIC",
-		"name": "generate TIC of T1D",
-		"curr_path": "",
-		"filename": "" ,
-		"GausFilter": true
-		},
-		{
-		"type": "Pipe",
-		"name": "TIC"
-		},
-		{
-		"type": "sum",
-		"name": "singerData"
 		}
 	]
 }
