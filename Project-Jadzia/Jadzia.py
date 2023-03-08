@@ -551,6 +551,81 @@ class FeatureDetection:
         f0 = features[0]
         for f in features:
             print(f.getRT(), f.getMZ())
+
+##########################################################
+##########################################################
+
+@dataclass
+class DataAnalysesConfig:
+    DataAnalysesID: id
+    input_file_name: str
+    output_file_name: str
+    author: str
+    run: bool
+    list_of_methods: List[dict] = field(default_factory=list)
+    visitor: List[str] = field(default_factory=list)
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(**data)
+
+@dataclass 
+class Report:
+    ReportID: id
+    created_by_pipe: str
+    connected_data: str
+    ListOfUsers: List[str] = field(default_factory=list)
+
+def createDataAnalysesConfig(user_input) -> DataAnalysesConfig:
+    return DataAnalysesConfig.from_dict(user_input)  
+
+def saveDataAnalysesConfig(DataAnalysesConfig: data) -> None:
+    with open(f'{data.DataAnalysesID}.json', w) as f:
+        json.dump(asdict(data), f)
+
+def UserSetDataAnalyses():
+    """ User will set a DataAnalyses from route"""
+    """ get User_input """
+    saveDataAnalysesConfig(createDataAnalysesConfig(user_input))
+
+def checkID(id_url) -> bool:
+    file_exists = exists(f'{id_url}.json')
+    return file_exists
+
+def loadDataAnalysesConfig(id_url) -> DataAnalysesConfig:
+    with open(f'{id_url}.json') as f:
+        json_obj = f.read()
+    Config_dict = json.loads(json_obj)
+    return createDataAnalysesConfig(Config_dict)
+
+def run_pipeline(id_url):
+    """ run pipeline """
+    if checkID(id_url) == False:
+        return "Invalid ID"
+    Config = loadDataAnalysesConfig(id_url)
+    n = 0
+    listOfMethods = [factory.create(item) for item in Config.list_of_methods]
+    n_max = len(listOfMethods)
+    from returnData import ReturnData
+    obj = ReturnData(MSExperiment(), pd.DataFrame(data=None, columns=full_df.columns, index=full_df.index))
+    while n < n_max:
+        obj = some_pipes[n].run(obj)
+        n = n+1
+    ListOfUsers = Config.author
+    ListOfUsers.append(Config.visitor)
+    outputPipe(Config.DataAnalysesID, obj, ListOfUsers)
+
+def save_Analyses(report) -> None:
+    """ save file in a dir """
+    with open(f'{report.ReportID}.json', w) as f:
+        json.dump(asdict(report), f)
+
+def outputPipe(DataAnalysesID, obj, ListOfUsers) -> None:
+    """ save mzML and create report """
+    report = Report(created_by_pipe = DataAnalysesID, connected_data = obj, ListOfUsers = ListOfUsers)
+    save_Analyses(report)
+
+
     
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)

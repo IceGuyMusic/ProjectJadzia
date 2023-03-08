@@ -5,27 +5,22 @@ import factory
 from pyopenms import *
 from returnData import ReturnData
 import pandas as pd
-
-def FilterGauss(exp, gaussian_width=1.0) -> MSExperiment:
-    gf = GaussFilter()
-    param = gf.getParameters()
-    param.setValue("gaussian_width", gaussian_width)
-    gf.setParameters(param)
-    gf.filterExperiment(exp)
-    print("Filtered data")
-    return exp
+from flask import current_app
 
 @dataclass 
-class GaussianFilter:
+class OpenMzML:
     name: str
     exp: MSExperiment
+    filename: str
+    path: str = current_app.config['MZML_FOLDER'] 
     returnDF: ReturnData = field(init=False)
 
     def run(self, obj) -> ReturnData:
-        print('Start filter...')
-        self.exp = obj.exp
-        filtered_exp = FilterGauss(self.exp)
-        obj.exp = filtered_exp
+        print('Open MzML File...')
+        curr_path = os.path.join(self.path, filename)
+        self.exp = MSExperiment()
+        MzMLFile().load(curr_path, self.exp)
+        obj.exp = self.exp
         return obj
 
 def initialize() -> None:

@@ -1,6 +1,6 @@
 """ This is a extension for Jadzia to Centroiding a OpenMS Experiment"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import factory
 from pyopenms import *
 from returnData import ReturnData
