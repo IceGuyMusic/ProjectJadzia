@@ -1,5 +1,5 @@
 {
-	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding"],
+	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding", "plugins.SignalToNoiseEstimator"],
 
 
 	"pipelines": [
@@ -15,6 +15,11 @@
 		{
 		"type": "Centroiding",
 		"name": "Centroiding the MS1 Spektra"
+		},
+		{
+		"type": "SignalToNoiseEstimator",
+		"name": "estimate the Signal to Noise ratio in MS1 Spectra"
 		}
+
 	]
 }

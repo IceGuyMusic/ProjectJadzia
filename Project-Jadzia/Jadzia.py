@@ -552,22 +552,5 @@ class FeatureDetection:
         for f in features:
             print(f.getRT(), f.getMZ())
     
-def SignalToNoise(path_exp):
-    # Load the mzML file
-    exp = MSExperiment()
-    MzMLFile().load(path_exp, exp)
-    
-    # Define the noise filter
-    filtered = MSExperiment()
-    for s in exp:
-        if s.getRT() > 30 and s.getRT() < 420:
-            if s.getMSLevel() == 1:
-                nf = SignalToNoiseEstimatorMeanIterative()
-                nf.init(s)
-                filtered.addSpectrum(s) 
-    
-    # Save the processed mzML file
-    MzMLFile().store("./uploads/mzml/processed_file.mzML", filtered)
-
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
