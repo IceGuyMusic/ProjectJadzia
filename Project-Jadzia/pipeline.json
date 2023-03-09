@@ -1,5 +1,5 @@
 {
-	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding", "plugins.SignalToNoiseEstimator"],
+	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding", "plugins.SignalToNoiseEstimator", "plugins.OpenMzML"],
 
 
 	"pipelines": [
@@ -8,6 +8,12 @@
 		"name": "Some Cool name", 
 		"exp": null
 		}, 
+		{
+		"type": "OpenMzML",
+		"name": "Open a MzML File and load it to exp",
+		"exp": null,
+		"filename": null
+		},
 		{
 		"type": "FilterByScanNr",
 		"name": "Filter the First Experiments",

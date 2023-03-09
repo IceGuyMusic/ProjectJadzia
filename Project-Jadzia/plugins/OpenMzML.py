@@ -24,4 +24,4 @@ class OpenMzML:
         return obj
 
 def initialize() -> None:
-    factory.register("GaussianFilter", GaussianFilter)
+    factory.register("OpenMzML", OpenMzML)
