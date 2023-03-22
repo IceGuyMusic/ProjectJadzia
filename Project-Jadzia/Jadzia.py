@@ -14,7 +14,7 @@ import plotly.express as px
 # Eigene 
 from main.config import Config
 import factory, loader
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 import json, bcrypt, os, pickle, datetime
 from typing import List
 from bson.objectid import ObjectId
@@ -238,39 +238,6 @@ def modus():
 #                                                                              #
 ################################################################################
 
-@celery.task(name='Jadzia.generateTIC')
-def generateTIC(curr_path, filename, GausFilter):
-    New_Workflow = Workflow(curr_path, filename)
-    exp = MSExperiment() 
-    MzMLFile().load(New_Workflow.get_path(), exp)
-    if GausFilter:
-        exp = FilterGauss(exp)
-    tic = exp.calculateTIC()
-    retention_times, intensities = tic.get_peaks()
-    retention_times = [spec.getRT() for spec in exp]
-    intensities = [sum(spec.get_peaks()[1]) for spec in exp if spec.getMSLevel() == 1]
-    
-    retention_times = []
-    intensities = []
-    for spec in exp:
-        if spec in exp:
-            if spec.getMSLevel() == 1:
-                retention_times.append(spec.getRT())
-                intensities.append(sum(spec.get_peaks()[1]))
-    df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
-    df['retention_times_min'] = df.retention_times/60
-    fig = px.line(df, x="retention_times_min", y="intensities", title=f"TIC der Datei {New_Workflow.name}", labels=dict(retention_times_min='Retentionszeit [s]', intenities='Intensität'))
-    New_Workflow.save_as_pickle(fig)
-    return f"Save {filename}"
-
-@celery.task(name='Jadzia.doSomeTest')
-def doSomeTest():
-    for obj in some_pipes:
-        if obj.name == "generate TIC of T1D":
-            obj.curr_path = app.config['MZML_FOLDER']
-            obj.filename = "T1D_Positiv.mzML"
-            obj.run()
-
 @celery.task(name='Jadzia.showMS1')
 def showMS1(curr_dir, filename):
     Workflow_class = Workflow(curr_dir, filename)
@@ -362,15 +329,6 @@ class study:
         with open(f"{self.curr_path}/uploads/process/{self.name}.study", 'wb') as f:
             pickle.dump(self, f)
 
-def FilterGauss(exp, gaussian_width=1.0) -> MSExperiment:
-    gf = GaussFilter()
-    param = gf.getParameters()
-    param.setValue("gaussian_width", gaussian_width)
-    gf.setParameters(param)
-    gf.filterExperiment(exp)
-    print("Filtered data")
-    return exp
-
 def load_class(curr_path, filename):
     with open(f"{curr_path}/uploads/process/{filename}", 'rb') as f:
         pickl_class = pickle.load(f)
@@ -387,6 +345,7 @@ with open("pipeline.json") as file:
     data = json.load(file)
 loader.load_plugins(data["plugins"])
 some_pipes = [factory.create(item) for item in data["pipelines"]]
+pipes_str = data["plugins"]
 
 @dataclass
 class HPLC_settings:
@@ -557,12 +516,12 @@ class FeatureDetection:
 
 @dataclass
 class DataAnalysesConfig:
-    DataAnalysesID: id
+    DataAnalysesID: str
     input_file_name: str
     output_file_name: str
     author: str
-    run: bool
-    list_of_methods: List[dict] = field(default_factory=list)
+    run: bool = False
+    list_of_methods: List[str] = field(default_factory=list)
     visitor: List[str] = field(default_factory=list)
     
     @classmethod
@@ -574,55 +533,99 @@ class Report:
     ReportID: id
     created_by_pipe: str
     connected_data: str
+    fig: px.line
     ListOfUsers: List[str] = field(default_factory=list)
+
+def randomword(length):
+    import random, string
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))
+
+@app.route('/ConfigAnalyses', methods=['GET', 'POST'])
+def data_form():
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        data.update({"DataAnalysesID": randomword(9)})
+        data.update({"run": False})
+        List_str = data.get("list_of_methods")
+        List_str = List_str.replace("plugins.", "")
+        methods_list = List_str.split(" | X |")
+        methods_list = methods_list[:-1]
+        data.update({"list_of_methods": methods_list})
+        config = DataAnalysesConfig.from_dict(data)
+        config.input_file_name = os.path.join(app.config['MZML_FOLDER'], config.input_file_name)
+        # Speichern Sie das Config-Objekt oder fahren Sie mit der Verarbeitung fort.
+        flash('Analyse is configured')
+        saveDataAnalysesConfig(config)
+        return redirect(url_for('mainPage')) 
+    options = dict(zip(pipes_str, pipes_str))
+    filename = get_mzml_files()
+    return render_template('add_method.html', filename=filename, options= options)
 
 def createDataAnalysesConfig(user_input) -> DataAnalysesConfig:
     return DataAnalysesConfig.from_dict(user_input)  
 
-def saveDataAnalysesConfig(DataAnalysesConfig: data) -> None:
-    with open(f'{data.DataAnalysesID}.json', w) as f:
+def saveDataAnalysesConfig(data: DataAnalysesConfig) -> None:
+    curr_path = os.path.join(app.config['DATA_ANALYSES_CONFIG_FOLDER'], f"{data.DataAnalysesID}.json")
+    with open(curr_path, 'w') as f:
         json.dump(asdict(data), f)
 
-def UserSetDataAnalyses():
+@app.route('/ConfigAnalyses/run/<id_url>') 
+def RunDataAnalyses(id_url):
     """ User will set a DataAnalyses from route"""
-    """ get User_input """
-    saveDataAnalysesConfig(createDataAnalysesConfig(user_input))
+    if checkID(id_url):
+        run_pipeline(id_url)
+        flash('Run Pipe')
+        return redirect(url_for('mainPage'))
+    else:
+        flash('Invalid ID')
+        return redirect(url_for('data_form'))
 
 def checkID(id_url) -> bool:
-    file_exists = exists(f'{id_url}.json')
+    curr_path = os.path.join(app.config['DATA_ANALYSES_CONFIG_FOLDER'], f"{id_url}.json")
+    file_exists = os.path.exists(curr_path)
     return file_exists
 
 def loadDataAnalysesConfig(id_url) -> DataAnalysesConfig:
-    with open(f'{id_url}.json') as f:
+    curr_path = os.path.join(app.config['DATA_ANALYSES_CONFIG_FOLDER'], f"{id_url}.json")
+    with open(curr_path) as f:
         json_obj = f.read()
     Config_dict = json.loads(json_obj)
     return createDataAnalysesConfig(Config_dict)
 
+@celery.task(name='Jadzia.run_pipe')
 def run_pipeline(id_url):
     """ run pipeline """
     if checkID(id_url) == False:
         return "Invalid ID"
     Config = loadDataAnalysesConfig(id_url)
     n = 0
-    listOfMethods = [factory.create(item) for item in Config.list_of_methods]
+    listOfMethods = [] 
+    while n < len(some_pipes):
+        if some_pipes[n].name in Config.list_of_methods:
+            listOfMethods.append(some_pipes[n])
+        n = n+1
+    n = 0
+    listOfMethods.reverse()
     n_max = len(listOfMethods)
     from returnData import ReturnData
-    obj = ReturnData(MSExperiment(), pd.DataFrame(data=None, columns=full_df.columns, index=full_df.index))
+    obj = ReturnData(MSExperiment(), pd.DataFrame(), meta=asdict(Config), fig = px.line())
     while n < n_max:
-        obj = some_pipes[n].run(obj)
+        print(f'run {n}')
+        obj = listOfMethods[n].run(obj)
         n = n+1
-    ListOfUsers = Config.author
+    ListOfUsers = [Config.author]
     ListOfUsers.append(Config.visitor)
     outputPipe(Config.DataAnalysesID, obj, ListOfUsers)
 
 def save_Analyses(report) -> None:
     """ save file in a dir """
-    with open(f'{report.ReportID}.json', w) as f:
-        json.dump(asdict(report), f)
+    with open(f'{report.ReportID}.pkl', 'wb') as f:
+        pickle.dump(report, f)
 
 def outputPipe(DataAnalysesID, obj, ListOfUsers) -> None:
     """ save mzML and create report """
-    report = Report(created_by_pipe = DataAnalysesID, connected_data = obj, ListOfUsers = ListOfUsers)
+    report = Report(randomword(9), created_by_pipe = DataAnalysesID, connected_data = obj.df, ListOfUsers = ListOfUsers, fig = obj.fig)
     save_Analyses(report)
 
 

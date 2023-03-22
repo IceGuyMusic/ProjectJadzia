@@ -12,12 +12,12 @@ class OpenMzML:
     name: str
     exp: MSExperiment
     filename: str
-    path: str = current_app.config['MZML_FOLDER'] 
+    #path: str = current_app.config['MZML_FOLDER'] 
     returnDF: ReturnData = field(init=False)
 
     def run(self, obj) -> ReturnData:
         print('Open MzML File...')
-        curr_path = os.path.join(self.path, filename)
+        curr_path = obj.meta['input_file_name']
         self.exp = MSExperiment()
         MzMLFile().load(curr_path, self.exp)
         obj.exp = self.exp

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Data Form{% endblock %}
+{% block content %}
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for msg in messages %}
+			<p class="text-warning">{{msg}}</p>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+	<h1>Data Form</h1>
+	<form method="POST">
+        
+		<label for="input_file_name">Input file name:</label>
+            <select class="form-control-small" name="input_file_name" name="input_file_name">
+   	    {% for file in filename %}
+     		 <option value="{{ file }}">{{ file }}</option>
+   	    {% endfor %}
+             </select><br><br>
+
+		<label for="output_file_name">Output file name:</label>
+		<input type="text" name="output_file_name" required><br>
+
+		<label for="author">Author:</label>
+		<input type="text" name="author" required><br>
+        
+        <label for="list_of_methods">List of methods:</label>
+		<input type="text" name="list_of_methods" required><br>
+
+		<label for="visitor">Visitor:</label>
+		<input type="text" name="visitor"><br>
+
+		<input type="submit" value="Submit">
+	</form>
+    
+    <form>
+        <select class="form-select-small" aria-label="Default select example" name="methods" id="txt">
+            <option selected>Open this select menu</option>
+    {% for key, value in options.items() %}
+      <option value="{{ key }}">{{ value }}</option>
+    {% endfor %}
+        </select>
+        <button type="submit" class="btn-list">Add method</button>
+    </form>
+    <div class="container" id="method_list" method="POST">
+        <ul>
+            <li>Default Method<span> | X |</span></li>
+        </ul>
+    </div>
+    
+<script>
+      const inputText = document.querySelector('#txt');
+      const myButton = document.querySelector('.btn-list');
+      const list = document.querySelector('.container ul');
+      myButton.addEventListener('click', (e)=>{
+        if(inputText.value != ""){
+          e.preventDefault();
+          const myLi = document.createElement('li');
+          myLi.innerHTML = inputText.value;
+          list.appendChild(myLi);
+          const mySpan = document.createElement('span');
+          mySpan.innerHTML = ' | X |';
+          myLi.appendChild(mySpan);
+
+        }
+        var close = document.querySelectorAll('span');
+        var num = close.length;
+        for(let i in close){
+          close[i].addEventListener('click', ()=>{
+            close[i].parentElement.style.opacity = 0;
+            setTimeout(()=>{
+              close[i].parentElement.style.display = "none";
+            }, 500);
+          });
+          inputText.value = "";
+      }
+
+      });
+    const methods = [];
+const lis = myLi;
+lis.forEach((li) => {
+    methods.push(li.firstChild.textContent.trim());
+});
+const methodsInput = document.createElement('input');
+methodsInput.type = 'hidden';
+methodsInput.name = 'methods';
+methodsInput.value = JSON.stringify(methods);
+const form = document.querySelector('form');
+form.appendChild(methodsInput);
+
+    </script>
+    {% endblock %}
+

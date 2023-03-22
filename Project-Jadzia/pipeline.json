@@ -5,12 +5,12 @@
 	"pipelines": [
 		{
 		"type": "GaussianFilter", 
-		"name": "Some Cool name", 
+		"name": "GaussianFilter", 
 		"exp": null
 		}, 
 		{
 		"type": "OpenMzML",
-		"name": "Open a MzML File and load it to exp",
+		"name": "OpenMzML",
 		"exp": null,
 		"filename": null
 		},
