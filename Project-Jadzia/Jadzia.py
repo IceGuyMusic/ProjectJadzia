@@ -232,62 +232,10 @@ def modus():
 
 ################################################################################
 #                                                                              #
-#                                                                              #
-#                                Celery Tasks                                  #
-#                                                                              #
-#                                                                              #
-################################################################################
-
-@celery.task(name='Jadzia.showMS1')
-def showMS1(curr_dir, filename):
-    Workflow_class = Workflow(curr_dir, filename)
-    exp = MSExperiment()
-    MzMLFile().load(Workflow_class.get_path(), exp)
-    df = pd.DataFrame(columns=['mz', 'intensity', 'rt'])
-    n = exp.getNrSpectra() # Nummer wie viele Experimente ich hatte
-    i=0
-    while i < n:
-        data = {
-            'mz' : exp[i].get_peaks()[0], 
-            'intensity' : exp[i].get_peaks()[1],
-            'rt' : exp[i].getRT()
-        }
-        df_data = pd.DataFrame(data)
-        df = pd.concat([df, df_data])
-        i=i+1
-    #df = df.query('rt < 300 & rt > 50')
-    fig = px.line(df, x="mz", y="intensity", line_group="rt", title='MS1 Spektrum')
-    Workflow_class.save_as_pickle(fig, True)
-    return f"Save and ready"
-
-################################################################################
-#                                                                              #
-#                                                                              #
 #                           Notwendige Funktionen                              #
 #                                                                              #
 #                                                                              #
 ################################################################################
-
-class Workflow:
-    def __init__(self,curr_path:str,  name: str):
-        self.name = name
-        self.curr_path = curr_path
-
-    def get_path(self):
-        self.path = os.path.join(self.curr_path,"uploads", "mzml", self.name)
-        return str(self.path)
-
-    def save_as_pickle(self, df, MSMS=False):
-        if MSMS:
-            filename = f"{self.name}_MSMS.dax"
-        else:
-            filename = f"{self.name}.dax"
-        with open(f"{self.curr_path}/uploads/process/{filename}", 'wb') as f:
-            pickle.dump(df, f)
-
-    def save_class(self):
-        with open(f"{self.curr_path}/uploads/process/{self.name}.workflow", 'wb') as f:
-            pickle.dump(self, f)
 
 class sample:
     """ define samples """
