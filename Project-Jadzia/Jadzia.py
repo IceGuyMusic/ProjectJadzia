@@ -568,7 +568,8 @@ def run_pipeline(id_url):
 
 def save_Analyses(report) -> None:
     """ save file in a dir """
-    with open(f'{report.ReportID}.pkl', 'wb') as f:
+    path = os.path.join(app.config['REPORT_FOLDER'], f'{report.ReportID}.rep')
+    with open(path, 'wb') as f:
         pickle.dump(report, f)
 
 def outputPipe(DataAnalysesID, obj, ListOfUsers) -> None:

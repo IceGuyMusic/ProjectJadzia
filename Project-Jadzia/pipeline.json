@@ -1,5 +1,5 @@
 {
-	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding", "plugins.SignalToNoiseEstimator", "plugins.OpenMzML"],
+	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding", "plugins.SignalToNoiseEstimator", "plugins.OpenMzML", "plugins.TIC", "plugins.MS1"],
 
 
 	"pipelines": [
@@ -22,12 +22,22 @@
 		},
 		{
 		"type": "Centroiding",
-		"name": "Centroiding the MS1 Spektra",
+		"name": "Centroiding",
 		"exp": null
 		},
 		{
 		"type": "SignalToNoiseEstimator",
-		"name": "estimate the Signal to Noise ratio in MS1 Spectra",
+		"name": "SignalToNoiseEstimator",
+		"exp": null
+		},
+		{
+		"type": "TIC",
+		"name": "TIC",
+		"exp": null
+		},
+		{
+		"type": "MS1",
+		"name": "MS1",
 		"exp": null
 		}
 

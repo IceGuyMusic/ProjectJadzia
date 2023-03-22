@@ -16,8 +16,7 @@ class Config:
     WIFF_FOLDER = os.path.join(curr_path, "uploads", "wiff") 
     MZML_FOLDER = os.path.join(curr_path, "uploads", "mzml")
     PROCESS_FOLDER = os.path.join(curr_path, "uploads", "process")
+    REPORT_FOLDER = os.path.join(curr_path, "uploads", "report")
     DATA_ANALYSES_CONFIG_FOLDER = os.path.join(curr_path, "uploads", "config", "data_analyses")
     ALLOWED_EXTENSIONS = ['wiff', 'scan', 'txt'] 
-    WIN_MZML_FOLDER = windows_wrk_dir + r"\uploads\mzml"
-    WIN_UPLOAD_FOLDER = windows_wrk_dir + r"\uploads\wiff"
     CURR_PATH = curr_path

@@ -30,22 +30,22 @@ def download_file(name):
 def seeResult():
     if request.method == 'POST':
         file_name = request.form['file_name']
-        file_path = f"./uploads/process/{file_name}"
+        file_path = f"./uploads/report/{file_name}"
         if os.path.exists(file_path):
             return redirect(url_for('main.load_from_pickle', filename=file_name))
         else:
             flash('File not found')
             return render_template('main.html')
     else:
-        dax_files = get_pickle_files()
-        return render_template('select_mzml_file.html', mzml_files=dax_files) 
+        rep_files = get_pickle_files()
+        return render_template('select_mzml_file.html', mzml_files=rep_files) 
 
 @main.route('/seeResult/<filename>')
 def load_from_pickle(filename):
     import pickle
-    with open('./uploads/process/'+filename, 'rb') as f:
+    with open('./uploads/report/'+filename, 'rb') as f:
         df = pickle.load(f)
-    return render_template("show.html", plot=df.to_html(full_html=False))
+    return render_template("show.html", plot=df.fig.to_html(full_html=False))
 
 ################################################################################
 #                                                                              #
@@ -90,8 +90,8 @@ def get_mzml_files():
                               
 def get_pickle_files():
     pickle_files = []
-    for file in os.listdir("./uploads/process/"):
-        if file.endswith('.dax'):
+    for file in os.listdir("./uploads/report/"):
+        if file.endswith('.rep'):
             pickle_files.append(file)
     return pickle_files
 
