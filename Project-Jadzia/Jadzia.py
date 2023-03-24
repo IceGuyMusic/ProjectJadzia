@@ -198,12 +198,6 @@ def see_study(filename):
     print(new_study)
     return redirect(url_for('mainPage'))
 
-@app.route('/testArea')
-def see_cwd():
-    exp = MSExperiment()
-    test = FeatureDetection(exp, 'T1D_Positiv.mzML')
-    test.run()
-    return redirect(url_for('mainPage'))
 
 ################################################################################
 #                                                                              #
