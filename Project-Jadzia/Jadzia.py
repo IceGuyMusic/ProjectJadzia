@@ -129,13 +129,15 @@ def register():
 
     return render_template('register.html')
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard.html')
 
-@app.route('/logout')
 @login_required
+@app.route('/dashboard')
+def dashboard():
+    df = load_dataframe_from_pickle(app.config['DB_REPORTS'])
+    return render_template('dashboard.html', db_reports = df.to_html())
+
+@login_required
+@app.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('login'))
@@ -210,26 +212,6 @@ def see_cwd():
 #                                                                              #
 #                                                                              #
 ################################################################################
-
-@app.route("/DataProcessingInterface/", methods=["GET", "POST"])
-def modus():
-    if request.method == "POST":
-        filename = request.form.get("filename")
-        modus = request.form.get("modi")
-        if modus == "TIC":
-            results = generateTIC.delay(app.config['MZML_FOLDER'], filename, True)
-            flash("Celery is working to produce TIC")
-        elif modus == "MS1":
-            results = showMS1.delay(app.config['MZML_FOLDER'], filename)
-            flash("celery is working to produce MS1 Spectrum")
-        else:
-            flash("Modus is not registered")
-        return redirect(url_for('mainPage'))
-    else:
-        filename = get_mzml_files()
-        modi = ['TIC', 'MS1', 'NN']
-        return render_template("Process.html", filename=filename, modi=modi)
-
 ################################################################################
 #                                                                              #
 #                           Notwendige Funktionen                              #
@@ -281,6 +263,8 @@ def load_class(curr_path, filename):
     with open(f"{curr_path}/uploads/process/{filename}", 'rb') as f:
         pickl_class = pickle.load(f)
     return pickl_class
+
+
 
 def get_mzml_files():
     mzml_files = []
@@ -465,10 +449,10 @@ class FeatureDetection:
 @dataclass
 class DataAnalysesConfig:
     DataAnalysesID: str
-    input_file_name: str
     output_file_name: str
     author: str
     run: bool = False
+    input_file_name: List[str] = field(default_factory=list)
     list_of_methods: List[str] = field(default_factory=list)
     visitor: List[str] = field(default_factory=list)
     
@@ -482,6 +466,7 @@ class Report:
     created_by_pipe: str
     connected_data: str
     fig: px.line
+    df: pd.DataFrame
     ListOfUsers: List[str] = field(default_factory=list)
 
 def randomword(length):
@@ -492,16 +477,24 @@ def randomword(length):
 @app.route('/ConfigAnalyses', methods=['GET', 'POST'])
 def data_form():
     if request.method == 'POST':
-        data = request.form.to_dict()
+        data = request.form.to_dict(flat=False)
         data.update({"DataAnalysesID": randomword(9)})
         data.update({"run": False})
+        data.update({"author": data.get("author")[0]})
+        data.update({"output_file_name": data.get("output_file_name")[0]})
+        print(data)
         List_str = data.get("list_of_methods")
-        List_str = List_str.replace("plugins.", "")
+        List_str = List_str[0].replace("plugins.", "")
         methods_list = List_str.split(" | X |")
+        methods_list = [method.strip() for method in methods_list]
         methods_list = methods_list[:-1]
         data.update({"list_of_methods": methods_list})
         config = DataAnalysesConfig.from_dict(data)
-        config.input_file_name = os.path.join(app.config['MZML_FOLDER'], config.input_file_name)
+        file_name_list = []
+        for n in config.input_file_name:
+            file_name_list.append(os.path.join(app.config['MZML_FOLDER'], n))
+            print(file_name_list)
+        config.input_file_name = file_name_list 
         # Speichern Sie das Config-Objekt oder fahren Sie mit der Verarbeitung fort.
         flash('Analyse is configured')
         saveDataAnalysesConfig(config)
@@ -522,7 +515,7 @@ def saveDataAnalysesConfig(data: DataAnalysesConfig) -> None:
 def RunDataAnalyses(id_url):
     """ User will set a DataAnalyses from route"""
     if checkID(id_url):
-        run_pipeline(id_url)
+        run_pipeline.delay(id_url)
         flash('Run Pipe')
         return redirect(url_for('mainPage'))
     else:
@@ -547,24 +540,37 @@ def run_pipeline(id_url):
     if checkID(id_url) == False:
         return "Invalid ID"
     Config = loadDataAnalysesConfig(id_url)
-    n = 0
-    listOfMethods = [] 
-    while n < len(some_pipes):
-        if some_pipes[n].name in Config.list_of_methods:
-            listOfMethods.append(some_pipes[n])
-        n = n+1
-    n = 0
-    listOfMethods.reverse()
-    n_max = len(listOfMethods)
-    from returnData import ReturnData
-    obj = ReturnData(MSExperiment(), pd.DataFrame(), meta=asdict(Config), fig = px.line())
-    while n < n_max:
-        print(f'run {n}')
-        obj = listOfMethods[n].run(obj)
-        n = n+1
-    ListOfUsers = [Config.author]
-    ListOfUsers.append(Config.visitor)
-    outputPipe(Config.DataAnalysesID, obj, ListOfUsers)
+    GreatReport = []
+    for files in Config.input_file_name:
+        Config_buffer = Config
+        Config_buffer.input_file_name = files
+        n = 0
+        listOfMethods = [] 
+        while n < len(some_pipes):
+            if some_pipes[n].name in Config_buffer.list_of_methods:
+                listOfMethods.append(some_pipes[n])
+            n = n+1
+        n = 0
+        #listOfMethods.reverse()
+        n_max = len(listOfMethods)
+        from returnData import ReturnData
+        obj = ReturnData(MSExperiment(), pd.DataFrame(), meta=asdict(Config_buffer), fig = px.line())
+        while n < n_max:
+            print(f'run {n}')
+            obj = listOfMethods[n].run(obj)
+            n = n+1
+        ListOfUsers = [Config_buffer.author]
+        ListOfUsers.append(Config_buffer.visitor)
+        report = outputPipe(Config_buffer.DataAnalysesID, obj, ListOfUsers)
+        GreatReport.append(report)
+    save_big_Analyses(GreatReport) 
+
+
+def save_big_Analyses(GreatReport) -> None:
+    """ save file in a dir """
+    path = os.path.join(app.config['REPORT_FOLDER'], f'{GreatReport[0].ReportID}.rep')
+    with open(path, 'wb') as f:
+        pickle.dump(GreatReport, f)
 
 def save_Analyses(report) -> None:
     """ save file in a dir """
@@ -572,12 +578,67 @@ def save_Analyses(report) -> None:
     with open(path, 'wb') as f:
         pickle.dump(report, f)
 
-def outputPipe(DataAnalysesID, obj, ListOfUsers) -> None:
+def outputPipe(DataAnalysesID, obj, ListOfUsers) -> Report:
     """ save mzML and create report """
-    report = Report(randomword(9), created_by_pipe = DataAnalysesID, connected_data = obj.df, ListOfUsers = ListOfUsers, fig = obj.fig)
+    report = Report(randomword(9), created_by_pipe = DataAnalysesID, connected_data = obj.df, ListOfUsers = ListOfUsers, fig = obj.fig, df = obj.df)
+    create_or_load_dataframe(report)
     save_Analyses(report)
+    return report
 
+#### Ich möchte eine Funktion haben, welche mir alle Reports auflistet: 
 
+def create_dataframe():
+    columns = ['ReportID', 'created_by_pipe', 'connected_data', 'fig_name', 'df_name', 'author', 'ListOfUsers']
+    df = pd.DataFrame(columns=columns)
+    return df
+
+def get_plot_title(fig):
+    title = fig.layout.title.text if fig.layout.title.text else "No title found"
+    return title
+
+def add_data_to_dataframe(df, report):
+    report_ids = report.ReportID
+    created_by_pipe = report.created_by_pipe
+    connected_data = "NN"
+    fig_names = get_plot_title(report.fig) 
+    df_names = "NN"
+    authors = report.ListOfUsers[0]
+    list_of_users = report.ListOfUsers
+
+    # Füge die Daten in das DataFrame ein
+    data_dict = {'ReportID': report_ids,
+                 'created_by_pipe': created_by_pipe,
+                 'connected_data': connected_data,
+                 'fig_name': fig_names,
+                 'df_name': df_names,
+                 'author': authors,
+                 'ListOfUsers': list_of_users}
+    df = df.append(pd.DataFrame(data_dict))
+    df.reset_index(drop=True, inplace=True)
+
+    return df
+
+def save_dataframe_as_pickle(df, filename):
+    with open(filename, 'wb') as f:
+        pickle.dump(df, f)
+    print(f"Das DataFrame wurde als Pickle-Datei unter dem Namen '{filename}' gespeichert.")
+
+def load_dataframe_from_pickle(filename):
+    with open(filename, 'rb') as f:
+        df = pickle.load(f)
+    print(f"Das DataFrame wurde aus der Pickle-Datei '{filename}' geladen.")
+    return df
+
+def create_or_load_dataframe(report: Report) -> pd.DataFrame:
+    if os.path.exists(app.config['DB_REPORTS']):
+        df = load_dataframe_from_pickle(app.config['DB_REPORTS'])
+        df = add_data_to_dataframe(df, report)
+        save_dataframe_as_pickle(df, app.config['DB_REPORTS'])
+    else:
+        df = create_dataframe()
+        df = add_data_to_dataframe(df, report)
+        save_dataframe_as_pickle(df, app.config['DB_REPORTS'])
+    return
     
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)

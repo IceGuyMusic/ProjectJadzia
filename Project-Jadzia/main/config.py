@@ -20,3 +20,4 @@ class Config:
     DATA_ANALYSES_CONFIG_FOLDER = os.path.join(curr_path, "uploads", "config", "data_analyses")
     ALLOWED_EXTENSIONS = ['wiff', 'scan', 'txt'] 
     CURR_PATH = curr_path
+    DB_REPORTS = "db_reports.pd"

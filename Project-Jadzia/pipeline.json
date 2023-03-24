@@ -1,5 +1,5 @@
 {
-	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding", "plugins.SignalToNoiseEstimator", "plugins.OpenMzML", "plugins.TIC", "plugins.MS1"],
+	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding", "plugins.SignalToNoiseEstimator", "plugins.OpenMzML", "plugins.TIC", "plugins.MS1", "plugins.SearchGABA"],
 
 
 	"pipelines": [
@@ -39,7 +39,13 @@
 		"type": "MS1",
 		"name": "MS1",
 		"exp": null
+		}, 
+		{
+		"type": "SearchGABA",
+		"name": "SearchGABA",
+		"exp": null
 		}
+
 
 	]
 }

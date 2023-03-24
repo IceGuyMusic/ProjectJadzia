@@ -8,6 +8,9 @@
 			{% endfor %}
 		{% endif %}
 	{% endwith %}
-        <title>Test for Protected Site</title>
-	Text text text
+        <title>Your Dashboard</title>
+	Your reports:
+	<table>
+      {{ db_reports|safe }}
+    </table>
     {% endblock %}

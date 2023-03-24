@@ -2,9 +2,8 @@
 
 from pyopenms import *
 import pandas as pd
-import os 
 import plotly.express as px
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import factory
 from returnData import ReturnData
 
@@ -12,19 +11,19 @@ from returnData import ReturnData
 def generateTIC(TIC):
     tic = TIC.exp.calculateTIC()
     retention_times, intensities = tic.get_peaks()
-    retention_times = [spec.getRT() for spec in exp]
-    intensities = [sum(spec.get_peaks()[1]) for spec in exp if spec.getMSLevel() == 1]
+    retention_times = [spec.getRT() for spec in TIC.exp]
+    intensities = [sum(spec.get_peaks()[1]) for spec in TIC.exp if spec.getMSLevel() == 1]
     
     retention_times = []
     intensities = []
-    for spec in exp:
-        if spec in exp:
+    for spec in TIC.exp:
+        if spec in TIC.exp:
             if spec.getMSLevel() == 1:
                 retention_times.append(spec.getRT())
                 intensities.append(sum(spec.get_peaks()[1]))
     df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
     df['retention_times_min'] = df.retention_times/60
-    fig = px.line(df, x="retention_times_min", y="intensities", title=f"TIC",  labels=dict(retention_times_min='Retentionszeit [s]', intenities='Intensität'))
+    fig = px.line(df, x="retention_times_min", y="intensities", title=f"TIC",  labels=dict(retention_times_min='Retentionszeit [min]', intenities='Intensität'))
     return fig
 
 @dataclass 

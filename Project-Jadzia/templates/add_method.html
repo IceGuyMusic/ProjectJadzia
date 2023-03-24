@@ -10,11 +10,11 @@
 	{% endwith %}
 	<h1>Data Form</h1>
 	<form method="POST">
-        
 		<label for="input_file_name">Input file name:</label>
-            <select class="form-control-small" name="input_file_name" name="input_file_name">
+		
    	    {% for file in filename %}
-     		 <option value="{{ file }}">{{ file }}</option>
+	    <input class="form-check-input" type="checkbox" name="input_file_name" id="check-{{file}}" value="{{ file }}">
+	    <label class="form-check-label" for="check-{{file}}">{{ file }}</label>
    	    {% endfor %}
              </select><br><br>
 
