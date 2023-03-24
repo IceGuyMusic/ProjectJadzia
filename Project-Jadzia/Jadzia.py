@@ -498,7 +498,7 @@ def data_form():
         # Speichern Sie das Config-Objekt oder fahren Sie mit der Verarbeitung fort.
         flash('Analyse is configured')
         saveDataAnalysesConfig(config)
-        return redirect(url_for('mainPage')) 
+        return redirect(url_for('seeRun')) 
     options = dict(zip(pipes_str, pipes_str))
     filename = get_mzml_files()
     return render_template('add_method.html', filename=filename, options= options)
@@ -510,6 +510,28 @@ def saveDataAnalysesConfig(data: DataAnalysesConfig) -> None:
     curr_path = os.path.join(app.config['DATA_ANALYSES_CONFIG_FOLDER'], f"{data.DataAnalysesID}.json")
     with open(curr_path, 'w') as f:
         json.dump(asdict(data), f)
+
+def get_config_files():
+    pickle_files = []
+    for file in os.listdir("./uploads/config/data_analyses/"):
+        if file.endswith('.json'):
+            pickle_files.append(file)
+    return pickle_files
+
+@app.route('/ConfigAnalyses/run/', methods=['GET', 'POST'])
+def seeRun():
+    if request.method == 'POST':
+        id_url = request.form['file_name']
+        file_path = f"./uploads/config/data_analyses/{id_url}"
+        if os.path.exists(file_path):
+            id_url = id_url.replace(".json", "")
+            return redirect(url_for('RunDataAnalyses', id_url=id_url))
+        else:
+            flash('File not found')
+            return render_template('main.html')
+    else:
+        config_files = get_config_files()
+        return render_template('select_mzml_file.html', mzml_files=config_files) 
 
 @app.route('/ConfigAnalyses/run/<id_url>') 
 def RunDataAnalyses(id_url):
