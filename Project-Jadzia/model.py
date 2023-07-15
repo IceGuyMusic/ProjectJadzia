@@ -3,9 +3,18 @@ import bcrypt, datetime
 from flask_login import UserMixin
 
 
+def add_to_json():
+    """ pass the dataclass in a dict to a json file """
+    pass
+
+
+@dataclass
 class sample:
     """ define samples """
-    pass
+    matrix: str
+    name: str
+    date: datetime
+    
 
 class run:
     """ define a run """
@@ -14,8 +23,26 @@ class run:
 class result:
     pass
 
+@dataclass
 class preparation:
-    pass
+    date: datetime
+    method: str
+
+@dataclass
+class preparationMethod:
+    """ muss ein Child von preperation sein """
+    name: str
+    cite: str
+    description: str
+
+
+@dataclass
+class enzymVerdau:
+    """ muss ein Child von preperationMethod sein """
+    name: str
+    temperature: int
+    inactivierung: str
+    enzym: str
 
 class pipeline:
     pass

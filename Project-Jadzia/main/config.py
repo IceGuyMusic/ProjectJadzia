@@ -19,7 +19,10 @@ class Config:
     REPORT_FOLDER = os.path.join(curr_path, "uploads", "report")
     DATA_ANALYSES_CONFIG_FOLDER = os.path.join(curr_path, "uploads", "config", "data_analyses")
     ALLOWED_EXTENSIONS = ['wiff', 'scan', 'txt'] 
+    ALLOWED_EXTENSIONS_HPLC = ['txt']
     CURR_PATH = curr_path
     DB_REPORTS = os.path.join(curr_path, "db_reports.pd")
     DB_PIPELINE = os.path.join(curr_path, "pipeline.json")
     DB_USERS = os.path.join(curr_path,"users.json" )
+    HPLC_FOLDER = os.path.join(curr_path, "hplc")
+
