@@ -12,9 +12,9 @@
     <h1>Upload new File</h1>
     <form method=post enctype=multipart/form-data>
         <br><p>Hochladen der .wiff Datei:<br>
-      <input type=file name=file>
+      <input type=file name=file multiple>
         <br><br>Hochladen der entsprechenen .wiff.scan Datei:<br>
-      <input type=file name=scan>
+      <input type=file name=scan multiple>
       <input type=submit value=Upload>
     </form>
-    {% endblock %}
+    {% endblock %} 

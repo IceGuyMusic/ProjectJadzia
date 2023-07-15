@@ -14,41 +14,43 @@ upload = Blueprint('upload', __name__)
 def uploadFile():
     if request.method == 'POST':
         
-        file = request.files['file']
-        scan = request.files['scan']
+        files = request.files.getlist['file']
+        scans = request.files.getlist['scan']
 
+        for file in files:
         # check if upload is a HPLC file 
-        if hplc_file(file.filename):
-            file_path = current_app.config['HPLC_FOLDER']+ str(file.filename)
-            file.save(file_path)
-            flash(f"Successfull upload for file {file.filename}")
-            current_app.logger.warning(f"{file.filename} was uploaded")
-            return render_template("main.html")
+            if hplc_file(file.filename):
+                file_path = current_app.config['HPLC_FOLDER']+ str(file.filename)
+                file.save(file_path)
+                flash(f"Successfull upload for file {file.filename}")
+                current_app.logger.warning(f"{file.filename} was uploaded")
+                return render_template("main.html")
 
         # check if scan is also part of the upload
-        if 'file' not in request.files or 'scan' not in request.files:
+        if not files or not scans:
             flash_message('no_file_or_scan')
             return redirect(request.url)
         
-        if file.filename == '' or scan.filename == '':
+        if any(file.filename == '' for file in files) or any(scan.filename == '' for scan in scans):
             flash_message('no_selected_file_or_scan')
             return redirect(request.url)
-        
-        if file and scan and allowed_file(file.filename) and allowed_file(scan.filename):
-            filename = secure_filename(file.filename)
-            scan_filename = secure_filename(scan.filename)
-            file_path = current_app.config['WIFF_FOLDER']+ str(filename)
-            scan_path = current_app.config['WIFF_FOLDER'] + str(scan_filename)
-            file.save(file_path)
-            scan.save(scan_path)
-            flash(f"Successfull upload for file {filename} and scan {scan_filename}")
-            convert_wiff(file_path)
-            current_app.logger.info(f"{filename} was uploaded")
-            return render_template("main.html")
-        else:
-            flash("Cannot save file. Maybe wrong type")
-            current_app.logger.warning(f"{file.filename} or {scan.filename} or both  was blocked because not allowed extension")
-            return redirect(request.url)
+
+        for file, scan in zip(files, scans):
+            if allowed_file(file.filename) and allowed_file(scan.filename):
+                filename = secure_filename(file.filename)
+                scan_filename = secure_filename(scan.filename)
+                file_path = current_app.config['WIFF_FOLDER'] + str(filename)
+                scan_path = current_app.config['WIFF_FOLDER'] + str(scan_filename)
+                file.save(file_path)
+                scan.save(scan_path)
+                flash(f"Successful upload for file {filename} and scan {scan_filename}")
+                convert_wiff(file_path)
+                current_app.logger.info(f"{filename} was uploaded")        
+                return render_template("main.html")
+            else:
+                flash("Cannot save file. Maybe wrong type")
+                current_app.logger.warning(f"{file.filename} or {scan.filename} or both  was blocked because not allowed extension")
+                return redirect(request.url)
     return render_template('upload.html')
 
 def flash_message(key):
