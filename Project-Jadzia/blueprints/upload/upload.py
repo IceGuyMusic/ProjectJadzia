@@ -14,8 +14,8 @@ upload = Blueprint('upload', __name__)
 def uploadFile():
     if request.method == 'POST':
         
-        files = request.files.getlist['file']
-        scans = request.files.getlist['scan']
+        files = request.files.getlist('file')
+        scans = request.files.getlist('scan')
 
         for file in files:
         # check if upload is a HPLC file 
