@@ -7,7 +7,9 @@ from typing import List
 import pickle, os, json
 from celery import shared_task
 import plotly.express as px
-import factory, loader
+from blueprints.process import factory
+from blueprints.process import loader
+from pyopenms import *
 
 process = Blueprint('process', __name__)
 
@@ -79,7 +81,7 @@ def data_form():
         # Speichern Sie das Config-Objekt oder fahren Sie mit der Verarbeitung fort.
         flash('Analyse is configured')
         saveDataAnalysesConfig(config)
-        return redirect(url_for('seeRun')) 
+        return redirect(url_for('process.seeRun')) 
     some_pipes, pipes_str = get_pipes()
     options = dict(zip(pipes_str, pipes_str))
     filename = get_mzml_files()
@@ -107,7 +109,7 @@ def seeRun():
         file_path = f"./uploads/config/data_analyses/{id_url}"
         if os.path.exists(file_path):
             id_url = id_url.replace(".json", "")
-            return redirect(url_for('RunDataAnalyses', id_url=id_url))
+            return redirect(url_for('process.RunDataAnalyses', id_url=id_url))
         else:
             flash('File not found')
             return render_template('main.html')
@@ -124,7 +126,7 @@ def RunDataAnalyses(id_url):
         return redirect(url_for('mainPage'))
     else:
         flash('Invalid ID')
-        return redirect(url_for('data_form'))
+        return redirect(url_for('process.data_form'))
 
 def checkID(id_url) -> bool:
     curr_path = os.path.join(current_app.config['DATA_ANALYSES_CONFIG_FOLDER'], f"{id_url}.json")
@@ -158,7 +160,7 @@ def run_pipeline(id_url):
         n = 0
         #listOfMethods.reverse()
         n_max = len(listOfMethods)
-        from returnData import ReturnData
+        from blueprints.process.returnData import ReturnData
         obj = ReturnData(MSExperiment(), pd.DataFrame(), meta=asdict(Config_buffer), fig = px.line())
         while n < n_max:
             print(f'run {n}')

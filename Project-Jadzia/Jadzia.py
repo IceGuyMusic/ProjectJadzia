@@ -89,8 +89,6 @@ def login():
 
 @app.route('/dashboard')
 def dashboard():
-    if not current_user.is_authenticated:
-        return app.login_manager.unauthorized()
     from blueprints.process.process import load_dataframe_from_pickle
     df = load_dataframe_from_pickle(app.config['DB_REPORTS'])
     return render_template('dashboard.html', db_reports = df.to_html())
@@ -130,6 +128,7 @@ def page_not_found(e):
     flash('Page not found. Maybe wrong URL')
     app.logger.error('User searched for an unregistered URL')
     return render_template('main.html')
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)

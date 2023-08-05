@@ -1,5 +1,5 @@
 {
-	"plugins": ["plugins.GaussianFilter", "plugins.FilterByScanNr", "plugins.Centroiding", "plugins.SignalToNoiseEstimator", "plugins.OpenMzML", "plugins.TIC", "plugins.MS1", "plugins.SearchGABA"],
+	"plugins": ["blueprints.process.plugins.GaussianFilter", "blueprints.process.plugins.FilterByScanNr", "blueprints.process.plugins.Centroiding", "blueprints.process.plugins.SignalToNoiseEstimator", "blueprints.process.plugins.OpenMzML", "blueprints.process.plugins.TIC", "blueprints.process.plugins.MS1", "blueprints.process.plugins.SearchGABA"],
 
 
 	"pipelines": [
