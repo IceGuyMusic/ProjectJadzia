@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  flaskapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      FLASK_RUN_HOST: '0.0.0.0'
+  
+  celeryworker:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+  redis:
+    image: redis:latest
+    ports:
+      - "6380:6379"
+
