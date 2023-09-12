@@ -5,3 +5,6 @@ share
 lib
 etc
 include
+*.yml
+*.yaml
+install.sh

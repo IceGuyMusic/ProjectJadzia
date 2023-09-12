@@ -1,4 +1,6 @@
-FROM python:3.9-buster
+FROM proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses as proteowizard_part
+
+FROM python:3.9-buster as app_part
 
 WORKDIR /app
 
@@ -9,6 +11,16 @@ RUN apt-get update && apt-get install -y \
 COPY . /app
 
 RUN pip install -r requirements.txt
+
+RUN mkdir -p /uploads && mkdir -p /uploads/wiff && mkdir -p /uploads/mzml && mkdir -p /uploads/process && mkdir -p /uploads/report && mkdir -p /uploads/config && mkdir -p /uploads/config/data_analyses
+
+FROM scratch 
+
+COPY --from=proteowizard_part / /
+
+COPY --from=app_part /app /app
+
+WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=Jadzia.py
