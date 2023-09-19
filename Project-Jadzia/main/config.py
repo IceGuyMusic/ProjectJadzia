@@ -3,7 +3,7 @@
 from pathlib import Path
 import os
 
-curr_path = os.getcwd()
+curr_path = "/app/"
 
 bash_msconvert = "sudo docker run -it --rm -e WINEDEBUG=-all -v /your/data:/data chambm/pwiz-skyline-i-agree-to-the-vendor-liscenses wine msconvert "
 windows_msconvert = Path(r"C:\Users\Biotechnologie\KNIME\knime_3.3.2\plugins\de.openms.win32.x86_64_2.1.0.201704211842\payload\bin\pwiz-bin\msconvert.exe")
