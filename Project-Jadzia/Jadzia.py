@@ -121,7 +121,7 @@ def load_user(id):
 
 @app.route("/")
 def mainPage():
-    return render_template("main.html")
+    return redirect(url_for('dashboard')))
 
 @app.errorhandler(404)
 def page_not_found(e):
