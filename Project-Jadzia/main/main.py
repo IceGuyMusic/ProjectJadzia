@@ -45,7 +45,7 @@ def load_from_pickle(filename):
     import pickle
     with open('./uploads/report/'+filename, 'rb') as f:
         df = pickle.load(f)
-    return render_template("show.html", plot=df.fig.to_html(full_html=False), table=df.df.to_html())
+    return render_template("show.html", plot=df[0].fig.to_html(full_html=False), table=df[0].df.to_html())
 
 ################################################################################
 #                                                                              #
