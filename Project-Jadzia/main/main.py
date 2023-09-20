@@ -30,7 +30,7 @@ def download_file(name):
 def seeResult():
     if request.method == 'POST':
         file_name = request.form['file_name']
-        file_path = f"./uploads/report/{file_name}"
+        file_path = os.path.join(current_app.config['REPORT_FOLDER'], file_name) 
         if os.path.exists(file_path):
             return redirect(url_for('main.load_from_pickle', filename=file_name))
         else:
