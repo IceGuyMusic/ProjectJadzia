@@ -3,7 +3,7 @@ from flask import Flask, Blueprint, current_app, redirect, url_for, render_templ
 from werkzeug.utils import secure_filename
 import pandas as pd 
 from dataclasses import dataclass, field, asdict
-from typing import List
+from typing import List, Dict, Optional
 import pickle, os, json
 from celery import shared_task
 import plotly.express as px
