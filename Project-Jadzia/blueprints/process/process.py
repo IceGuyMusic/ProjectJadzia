@@ -55,8 +55,7 @@ class Report:
     def to_dict(self) -> dict:
         data = { 
             "ReportID" : self.ReportID,
-            "created_by_pipe" : self.created_by_pipe,
-            "connected_data" : self.connected_data
+            "created_by_pipe" : self.created_by_pipe
                }
         if self.df.empty: 
             data['df'] = '{}'
