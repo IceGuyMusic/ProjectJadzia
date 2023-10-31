@@ -52,6 +52,34 @@ class Report:
     df: pd.DataFrame
     ListOfUsers: List[str] = field(default_factory=list)
 
+    def to_dict(self) -> dict:
+        data = asdict(self)
+        del data['fig']
+        data['df'] = self.df.to_dict()
+        return data
+
+@dataclass
+class GreatReportJSON:
+    reports: Dict[int, Dict] = field(default_factory=dict)
+    first_report_id: int = None
+
+    def add_report(self, report: Report):
+        report_data = report.to_dict()
+        self.reports[report.ReportID] = report_data
+
+        if self.first_report_id is None:
+            self.first_report_id = report.ReportID
+
+    def save_to_json(self):
+        if self.first_report_id is None:
+            print("Error: Nothing to save")
+            return
+
+        filename = f"great_report_{self.first_report_id}.json"
+        with open(filename, 'w') as f:
+            json.dump(self.reports, f, indent=4)
+
+
 def randomword(length):
     import random, string
     letters = string.ascii_lowercase
@@ -147,6 +175,7 @@ def run_pipeline(id_url):
         return "Invalid ID"
     Config = loadDataAnalysesConfig(id_url)
     GreatReport = []
+    ForExportReport = GreatReportJSON()
     some_pipes, pipes_str = get_pipes()
     for files in Config.input_file_name:
         Config_buffer = Config
@@ -170,7 +199,9 @@ def run_pipeline(id_url):
         ListOfUsers.append(Config_buffer.visitor)
         report = outputPipe(Config_buffer.DataAnalysesID, obj, ListOfUsers)
         GreatReport.append(report)
+        ForExportReport.add_report(report)
     save_big_Analyses(GreatReport) 
+    ForExportReport.save_to_json()
 
 
 def save_big_Analyses(GreatReport) -> None:
