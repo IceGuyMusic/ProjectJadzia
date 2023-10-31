@@ -53,9 +53,13 @@ class Report:
     ListOfUsers: List[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        data = asdict(self)
-        del data['fig']
-        data['df'] = self.df.to_json(date_format="iso")
+        data = { 
+            "ReportID" : self.ReportID,
+            "created_by_pipe" : self.created_by_pipe,
+            "connected_data" : self.connected_data
+               }
+        data['df'] = self.df.to_json(orient="table")
+        print(data)
         return data
 
 @dataclass
