@@ -55,7 +55,7 @@ class Report:
     def to_dict(self) -> dict:
         data = asdict(self)
         del data['fig']
-        data['df'] = self.df.to_dict()
+        data['df'] = self.df.to_dict(orient='records')
         return data
 
 @dataclass
