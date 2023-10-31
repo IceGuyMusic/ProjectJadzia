@@ -58,7 +58,10 @@ class Report:
             "created_by_pipe" : self.created_by_pipe,
             "connected_data" : self.connected_data
                }
-        data['df'] = self.df.to_json(orient="table")
+        if self.df.empty: 
+            data['df'] = '{}'
+        else:
+            data['df'] = self.df.to_json(orient="table")
         print(data)
         return data
 
