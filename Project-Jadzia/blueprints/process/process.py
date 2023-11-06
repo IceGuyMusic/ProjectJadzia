@@ -57,7 +57,7 @@ class Report:
             "ReportID" : self.ReportID,
             "created_by_pipe" : self.created_by_pipe
                }
-        curr_path = os.path.join(current_app.config['DATA_ANALYSES_CONFIG_FOLDER'], f"{self.ReportID}.csv")
+        curr_path = os.path.join(current_app.config['REPORT_FOLDER'], f"{self.ReportID}.csv")
         self.df.to_csv(curr_path)
         print(data)
         return data
