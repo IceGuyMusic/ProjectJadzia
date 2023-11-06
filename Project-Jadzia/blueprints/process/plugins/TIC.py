@@ -24,7 +24,7 @@ def generateTIC(TIC):
     df = pd.DataFrame({'retention_times': retention_times, 'intensities': intensities})
     df['retention_times_min'] = df.retention_times/60
     fig = px.line(df, x="retention_times_min", y="intensities", title=f"TIC",  labels=dict(retention_times_min='Retentionszeit [min]', intenities='Intensität'))
-    return fig
+    return fig, df
 
 @dataclass 
 class TIC:
@@ -34,8 +34,9 @@ class TIC:
 
     def run(self, obj) -> ReturnData:
         self.exp = obj.exp
-        tic = generateTIC(self)
+        tic, tic_data = generateTIC(self)
         obj.fig = tic
+        obj.df = tic_data
         return obj
 
 def initialize() -> None:
