@@ -57,10 +57,8 @@ class Report:
             "ReportID" : self.ReportID,
             "created_by_pipe" : self.created_by_pipe
                }
-        if self.df.empty: 
-            data['df'] = '{}'
-        else:
-            data['df'] = self.df.to_json(orient="table")
+        curr_path = os.path.join(current_app.config['DATA_ANALYSES_CONFIG_FOLDER'], f"{self.ReportID}.csv")
+        self.df.to_csv(curr_path)
         print(data)
         return data
 
@@ -224,7 +222,7 @@ def save_Analyses(report) -> None:
 
 def outputPipe(DataAnalysesID, obj, ListOfUsers) -> Report:
     """ save mzML and create report """
-    report = Report(randomword(9), created_by_pipe = DataAnalysesID, connected_data = obj.df, ListOfUsers = ListOfUsers, fig = obj.fig, df = obj.df)
+    report = Report(randomword(9), created_by_pipe = DataAnalysesID, connected_data = obj.df, ListOfUsers = ListOfUsers, fig = obj.fig, df = obj.df.copy())
     create_or_load_dataframe(report)
     save_Analyses(report)
     return report
