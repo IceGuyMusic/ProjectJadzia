@@ -36,7 +36,7 @@ class TIC:
         self.exp = obj.exp
         tic, tic_data = generateTIC(self)
         obj.fig = tic
-        obj.df = tic_data
+        obj.df = tic_data.copy()
         return obj
 
 def initialize() -> None:
