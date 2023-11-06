@@ -101,9 +101,7 @@ def data_form():
         data.update({"output_file_name": data.get("output_file_name")[0]})
         print(data)
         List_str = data.get("list_of_methods")
-        List_str = List_str[0].replace("blueprints.", "")
-        List_str = List_str[0].replace("process.", "")
-        List_str = List_str[0].replace("plugins.", "")
+        List_str = List_str[0].replace("blueprints.process.plugins.", "")
         methods_list = List_str.split(" | X |")
         methods_list = [method.strip() for method in methods_list]
         methods_list = methods_list[:-1]
