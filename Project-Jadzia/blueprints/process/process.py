@@ -181,14 +181,15 @@ def run_pipeline(id_url):
     GreatReport = []
     ForExportReport = GreatReportJSON()
     some_pipes, pipes_str = get_pipes()
-    print(f'Pipelines wurden geladen {some_pipes} und {pipes_str}')
     for files in Config.input_file_name:
         Config_buffer = Config
         Config_buffer.input_file_name = files
         n = 0
         listOfMethods = [] 
         while n < len(some_pipes):
+            print(n, some_pipes[n].name)
             if some_pipes[n].name in Config_buffer.list_of_methods:
+                print(n, some_pipes[n].name)
                 listOfMethods.append(some_pipes[n])
             n = n+1
         n = 0
