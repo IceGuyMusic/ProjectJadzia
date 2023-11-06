@@ -65,7 +65,7 @@ class SearchGABA:
         # Set the title and labels
         fig.update_layout(height=800, width=600, title_text='Distribution of Retention Time for Each Fragment Ion', showlegend=False)
         obj.fig = fig
-        obj.df = df
+        obj.df = df.copy()
         print("Search GABA complete")
         return obj
 
