@@ -57,8 +57,10 @@ class Report:
             "ReportID" : self.ReportID,
             "created_by_pipe" : self.created_by_pipe
                }
-        curr_path = os.path.join(current_app.config['REPORT_FOLDER'], f"{self.ReportID}.csv")
-        self.df.to_csv(curr_path)
+        if self.df.empty:
+            data['df'] = '{}'
+        else:
+            data['df'] = self.df.to_json(orient="table")
         print(data)
         return data
 
@@ -99,6 +101,8 @@ def data_form():
         data.update({"output_file_name": data.get("output_file_name")[0]})
         print(data)
         List_str = data.get("list_of_methods")
+        List_str = List_str[0].replace("blueprints.", "")
+        List_str = List_str[0].replace("process.", "")
         List_str = List_str[0].replace("plugins.", "")
         methods_list = List_str.split(" | X |")
         methods_list = [method.strip() for method in methods_list]
@@ -187,9 +191,7 @@ def run_pipeline(id_url):
         n = 0
         listOfMethods = [] 
         while n < len(some_pipes):
-            print(n, some_pipes[n].name)
             if some_pipes[n].name in Config_buffer.list_of_methods:
-                print(n, some_pipes[n].name)
                 listOfMethods.append(some_pipes[n])
             n = n+1
         n = 0
