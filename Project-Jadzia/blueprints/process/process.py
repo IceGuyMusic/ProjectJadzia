@@ -95,11 +95,15 @@ def randomword(length):
 def data_form():
     if request.method == 'POST':
         data = request.form.to_dict(flat=False)
-        data.update({"DataAnalysesID": randomword(9)})
+        output_file_name = data.get("output_file_name")[0]
+        id_prefix = output_file_name if output_file_name else ""
+        analyses_id = randomword(9)
+        data_analyses_id = f"{id_prefix}{analyses_id}" if id_prefix else analyses_id
+
+        data.update({"output_file_name": output_file_name})
+        data.update({"DataAnalysesID": data_analyses_id})
         data.update({"run": False})
         data.update({"author": data.get("author")[0]})
-        data.update({"output_file_name": data.get("output_file_name")[0]})
-        print(data)
         List_str = data.get("list_of_methods")
         List_str = List_str[0].replace("blueprints.process.plugins.", "")
         methods_list = List_str.split(" | X |")
@@ -110,9 +114,7 @@ def data_form():
         file_name_list = []
         for n in config.input_file_name:
             file_name_list.append(os.path.join(current_app.config['MZML_FOLDER'], n))
-            print(file_name_list)
         config.input_file_name = file_name_list 
-        # Speichern Sie das Config-Objekt oder fahren Sie mit der Verarbeitung fort.
         flash('Analyse is configured')
         saveDataAnalysesConfig(config)
         return redirect(url_for('process.seeRun')) 
