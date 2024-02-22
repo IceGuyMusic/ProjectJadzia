@@ -13,7 +13,7 @@ import plotly.express as px
 # Eigene 
 from main.config import Config
 from dataclasses import dataclass, field, asdict
-import json, bcrypt, os, pickle, datetime
+import json, bcrypt, os, pickle
 from typing import List
 from model import User
 from celery import Celery, Task
